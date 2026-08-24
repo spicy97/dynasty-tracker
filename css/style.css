@@ -1,0 +1,116 @@
+/* ============================================================
+   Dynasty Salary Tracker — Stylesheet
+   Step 7 will fill this in with full styling.
+   ============================================================ */
+
+/* ── Reset ───────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f4f4f4;
+  color: #111;
+  min-height: 100vh;
+}
+
+/* ── Utility ─────────────────────────────────────────────────── */
+.hidden {
+  display: none !important;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+#site-header {
+  background: #1a1a2e;
+  color: #fff;
+  padding: 1.5rem 2rem;
+  text-align: center;
+}
+
+#site-header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.25rem;
+}
+
+/* ── Error Banner ────────────────────────────────────────────── */
+#error-banner {
+  background: #b71c1c;
+  color: #fff;
+  text-align: center;
+  padding: 0.75rem 1rem;
+  font-weight: bold;
+}
+
+/* ── Team Grid ───────────────────────────────────────────────── */
+#team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Cap Table ───────────────────────────────────────────────── */
+#cap-table-section {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+#cap-table-section h2 {
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+}
+
+#cap-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+#cap-table th,
+#cap-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+#cap-table th {
+  background: #1a1a2e;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+#site-footer {
+  text-align: center;
+  padding: 1.5rem 2rem;
+  font-size: 0.8rem;
+  color: #666;
+  border-top: 1px solid #ddd;
+  margin-top: 2rem;
+}
+
+#site-footer .disclaimer {
+  margin-top: 0.4rem;
+  font-style: italic;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  #team-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+
+  #cap-table-section {
+    padding: 1rem;
+  }
+}

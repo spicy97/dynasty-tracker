@@ -1,0 +1,36 @@
+# sync-salaries.yml
+# Nightly GitHub Action — downloads Google Sheet CSV and rebuilds data/salaries.json
+#
+# Step 9 of requirements.md.
+# NOTE: Custom Actions workflows are EXEMPT from the GitHub Pages
+# 10 builds/hour soft limit, so this will not count against that quota.
+#
+# Requirements before enabling:
+#   - Google Sheet must be publicly viewable (Share → Anyone with link → Viewer)
+#   - scripts/sync-salaries.js must exist and parse the CSV → salaries.json
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 6am UTC daily
+  workflow_dispatch:       # also allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync salaries from Google Sheet
+        run: node scripts/sync-salaries.js
+
+      - name: Commit updated salaries.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data/salaries.json
+          git commit -m "chore: sync salaries from Google Sheet" || echo "No changes to commit"
+          git push

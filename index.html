@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynasty Salary Tracker</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header id="site-header">
+    <h1 id="league-name">Loading league…</h1>
+    <p id="cap-summary">Salary Cap: $<span id="salary-cap">—</span></p>
+  </header>
+
+  <!-- ── Error Banner (hidden by default) ───────────────────── -->
+  <div id="error-banner" class="hidden">
+    ⚠️ Unable to reach Sleeper — check back shortly.
+  </div>
+
+  <!-- ── Team Cards Grid ────────────────────────────────────── -->
+  <main id="team-grid">
+    <!-- Populated by app.js -->
+  </main>
+
+  <!-- ── Cap Summary Table ──────────────────────────────────── -->
+  <section id="cap-table-section">
+    <h2>Cap Summary</h2>
+    <table id="cap-table">
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>Owner</th>
+          <th>Total Salary</th>
+          <th>Remaining Cap</th>
+        </tr>
+      </thead>
+      <tbody id="cap-table-body">
+        <!-- Populated by app.js -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <footer id="site-footer">
+    <p id="sync-timestamp">Last synced with Sleeper: —</p>
+    <p class="disclaimer">
+      This tool is not affiliated with or endorsed by Sleeper.
+      Roster data is fetched live from the Sleeper API.
+    </p>
+  </footer>
+
+  <!-- ── Scripts (order matters) ────────────────────────────── -->
+  <script src="js/config.js"></script>
+  <script src="js/sleeperApi.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
