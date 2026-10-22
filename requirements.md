@@ -46,6 +46,72 @@ A fully static site (no server required) hosted on **GitHub Pages** that:
 
 ---
 
+## Build Execution Principles
+
+> These principles govern how this plan is implemented turn-by-turn to stay within output token limits and keep every file verifiable before moving on.
+
+### One File Per Turn
+
+Each implementation turn produces **exactly one file**, fully written with no stubs or TODOs. Never combine two file implementations in a single response.
+
+### Ascending File Size Order
+
+Work smallest-to-largest so context is fresh when tackling the most complex files.
+
+| Turn | File | Size | Rationale |
+|---|---|---|---|
+| **1** | `js/config.js` | Tiny | Pure data — team names, colors, emojis |
+| **2** | `js/sleeperApi.js` | Small | 3 fetch functions + error handling |
+| **3** | `data/salaries.json` | Small | Data-only, no logic |
+| **4** | `css/style.css` | Medium | Additive styling — team cards, sections, over-cap highlight |
+| **5a** | `js/app.js` (data layer) | Large | fetch, sessionStorage cache, lookup map building |
+| **5b** | `js/app.js` (render layer) | Large | `renderTeamCard()`, `renderCapTable()`, timestamp, error states |
+| **6** | `scripts/sync-salaries.js` | Medium | Standalone Node script for nightly Google Sheet sync |
+
+### Split `app.js` Into Two Turns
+
+`app.js` is the largest and most complex file. It is always split into two sequential turns:
+- **Turn 5a — Data Layer:** fetch, sessionStorage cache, `buildRosterMap()`, `buildSalaryMap()`
+- **Turn 5b — Render Layer:** `classifyPlayer()`, `renderTeamCard()`, `renderCapTable()`, `renderTimestamp()`, `showError()`
+
+This split is safe because `app.js` is the last JS file — nothing else imports from it.
+
+### Use Small Named Helper Functions
+
+All logic goes into small, single-purpose named functions — never one large monolithic block. This makes truncation immediately visible and each function independently verifiable.
+
+✅ Good:
+```js
+function buildSalaryMap(salariesData) { ... }
+function classifyPlayer(playerId, roster) { ... }
+function renderTeamCard(roster, userMap, salaryMap) { ... }
+```
+
+❌ Avoid:
+```js
+async function init() {
+  // 200 lines of inline logic
+}
+```
+
+### Verify After Every Turn
+
+After each file is written, read it back to confirm:
+- No functions contain stubs or TODOs
+- No code is visibly truncated mid-block
+- The file is syntactically complete
+
+Do not proceed to the next turn until the current file passes verification.
+
+### What to Avoid
+
+- ❌ Never implement two files in one response
+- ❌ Never leave a function body as a stub (`// TODO`) in a "completed" file
+- ❌ Never use player name strings as lookup keys — always `player_id`
+- ❌ Never call `/players/nfl` at runtime
+
+---
+
 ## Step 1 — Create & Configure the GitHub Repository
 
 1. Create a new repo (e.g., `dynasty-tracker`) under your GitHub account
@@ -70,6 +136,8 @@ dynasty-tracker/
 │   └── app.js                  # Main logic: fetch → merge → render
 ├── data/
 │   └── salaries.json           # Player ID → salary mapping (source of truth)
+├── scripts/
+│   └── sync-salaries.js        # Node script for nightly Google Sheet sync (Turn 6)
 └── .github/
     └── workflows/
         └── sync-salaries.yml   # (Optional) Nightly GitHub Action
@@ -78,6 +146,8 @@ dynasty-tracker/
 ---
 
 ## Step 3 — Build `data/salaries.json` (Salary Source of Truth)
+
+> **Turn 3** — data-only file, no logic.
 
 Since salaries aren't stored in Sleeper, this JSON file maps Sleeper player IDs → salary and metadata. It is seeded manually from the Google Sheet.
 
@@ -101,9 +171,13 @@ Cross-reference player names from the Google Sheet against Sleeper player IDs fr
 
 > ⚠️ **Key rule:** Once a player's Sleeper `player_id` is confirmed and written into `salaries.json`, the **ID is the source of truth** — not the name. Player names in the JSON are for human readability only and should not be used as lookup keys in code.
 
+**✅ Verify:** Confirm `players` object is populated, all entries have `name`, `salary`, and `roster_id`, and the JSON is valid before proceeding.
+
 ---
 
 ## Step 4 — Build `js/config.js`
+
+> **Turn 1** — smallest file, pure static data. Implement this first.
 
 Stores static config to avoid hardcoding values in logic files:
 
@@ -112,16 +186,20 @@ const CONFIG = {
   LEAGUE_ID: "1355351787401383936",
   SALARY_CAP: 245,
   TEAM_COLORS: {
-    1: { color: "#1565C0", emoji: "🟦" },   // The Dicktator
-    2: { color: "#6D4C41", emoji: "🟫" },   // Mr. Whatsitt??
-    // ...etc
+    1: { color: "#1565C0", emoji: "🟦", teamName: "The Dicktator" },
+    2: { color: "#6D4C41", emoji: "🟫", teamName: "Mr. Whatsitt??" },
+    // ...all 8 teams
   }
 };
 ```
 
+**✅ Verify:** All 8 `roster_id` entries (1–8) are present in `TEAM_COLORS`, each with a `color`, `emoji`, and `teamName`. No placeholders remain.
+
 ---
 
 ## Step 5 — Build `js/sleeperApi.js`
+
+> **Turn 2** — small file, 3 fetch functions + shared error handler.
 
 Three fetch calls made **in parallel** on page load:
 
@@ -149,37 +227,72 @@ Three fetch calls made **in parallel** on page load:
 
 Use the **thumbnail** URL for team card headers to minimise load time.
 
+### Error Handling Requirements
+
+The shared `sleeperFetch()` wrapper must:
+- Throw a typed error distinguishing `429`, `500`, and `503` from other failures
+- Allow `app.js` to catch and display a specific user-facing message per error type
+
+**✅ Verify:** All three fetch functions are fully implemented (no `return null` stubs). `sleeperFetch()` handles `429`, `500`, and `503` explicitly.
+
 ---
 
 ## Step 6 — Build `js/app.js` (Core Logic)
 
+> **Turns 5a and 5b** — largest file, always split into two sequential turns.
+
+### Turn 5a — Data Layer
+
+Implement these named functions:
+
 ```
-on page load:
-  1. Fetch salaries.json (from /data/)
-  2. Check sessionStorage for cached Sleeper data (league, users, rosters)
-       → If cache exists and is from this session: use it, skip API calls
-       → If no cache: fetch Promise.all([league, users, rosters]) from Sleeper API
-            → On success: write results to sessionStorage with timestamp
-            → On 429/500/503: show error banner ("Unable to reach Sleeper —
-              check back shortly") and halt render gracefully
-  3. Build lookup maps:
-       roster_id  → user/team info
-       player_id  → salary (from salaries.json)
-  4. For each roster:
-       a. Guard: if roster.players is null/empty, render "No players rostered" placeholder
-       b. Classify each player: starter | bench | taxi | IR
-            (player_id is the key — never player name)
-       c. Look up salary from salaries.json by player_id
-       d. Sum salaries → total used
-       e. Calculate remaining cap = SALARY_CAP - total
-  5. Render team cards in sorted order (by roster_id)
-  6. Render cap summary table at bottom
-  7. Show "Last synced with Sleeper: [timestamp]"
+fetchSalaries()             — GET data/salaries.json
+loadSleeperData()           — check sessionStorage cache; if miss, call Promise.all([fetchLeague, fetchUsers, fetchRosters]); on success cache; on error throw
+buildUserMap(users)         — roster_id → { teamName, ownerName, avatarUrl }
+buildSalaryMap(salaries)    — player_id → { name, salary }
 ```
+
+Cache schema written to `sessionStorage`:
+```json
+{
+  "timestamp": "ISO string",
+  "league": { "..." : "..." },
+  "users": [ "..." ],
+  "rosters": [ "..." ]
+}
+```
+
+On `429` / `500` / `503`: call `showError()` and return early — do not proceed to render.
+
+**✅ Verify (5a):** All data-layer functions are present and complete. `loadSleeperData()` reads and writes sessionStorage correctly. Error path calls `showError()` and returns.
+
+### Turn 5b — Render Layer
+
+Implement these named functions:
+
+```
+classifyPlayer(playerId, roster)           — returns "starter" | "bench" | "taxi" | "ir"
+renderTeamCard(roster, userMap, salaryMap) — builds and returns a DOM card element
+renderCapTable(rosters, userMap, salaryMap)— populates #cap-table-body rows
+renderTimestamp(isoString)                 — sets #sync-timestamp text
+showError(message)                         — shows #error-banner, hides #team-grid
+init()                                     — orchestrates all of the above on DOMContentLoaded
+```
+
+Render rules:
+- Guard: if `roster.players` is `null` or empty → render "No players rostered" placeholder, never crash
+- Player sections order: Starters → Bench → IR → Taxi Squad
+- `player_id` is the key for all lookups — never player name
+- Remaining cap shown in **red** if negative (over cap)
+- Teams rendered in ascending `roster_id` order
+
+**✅ Verify (5b):** All render-layer functions are present and complete. `classifyPlayer()` covers all four cases. `renderTeamCard()` outputs all four sections. `init()` calls all functions in the correct order.
 
 ---
 
 ## Step 7 — Build `index.html` and `css/style.css`
+
+> `index.html` is already complete. `css/style.css` is **Turn 4** — implement after `sleeperApi.js`, before `app.js`.
 
 ### Layout
 
@@ -192,6 +305,17 @@ on page load:
 - **Bottom:** Cap Summary table with all 8 teams side-by-side
 - **Fully responsive** (works on mobile)
 - **Footer disclaimer:** *"This tool is not affiliated with or endorsed by Sleeper. Roster data is fetched live from the Sleeper API."*
+
+### CSS Requirements
+
+The stylesheet must include styles for:
+- `.team-card` — card container with colored top border driven by `style` attribute
+- `.team-card-header` — banner row with avatar thumbnail, emoji, team name, owner name
+- `.section-label` — row label for Starters / Bench / IR / Taxi Squad sections
+- `.over-cap` — red text class applied to remaining cap when negative
+- All existing base styles (reset, header, error banner, grid, cap table, footer, responsive) preserved
+
+**✅ Verify:** Open `index.html` in a browser with the console open. Confirm no 404s for CSS/JS, no JS errors on load, and the page structure is visible.
 
 ---
 
@@ -207,6 +331,8 @@ on page load:
 ---
 
 ## Step 9 — (Optional) GitHub Action for Auto-Sync
+
+> **Turn 6** — `scripts/sync-salaries.js`. The workflow YAML (`.github/workflows/sync-salaries.yml`) is already complete.
 
 **`.github/workflows/sync-salaries.yml`**
 
@@ -233,9 +359,15 @@ jobs:
 ### Requirements
 
 - Google Sheet must be **publicly viewable** (Share → Anyone with link → Viewer)
-- A `scripts/sync-salaries.js` Node script that parses the CSV and writes `salaries.json`
+- `scripts/sync-salaries.js` must:
+  - Accept the Google Sheet CSV export URL (hardcoded or via env var)
+  - Parse the CSV into the `salaries.json` schema
+  - Write the result to `data/salaries.json` with an updated `last_updated` field
+  - Use only Node.js built-ins (`https`, `fs`) — no npm dependencies
 
 > ✅ **GitHub Pages note:** Custom Actions workflows are **exempt** from the standard 10 builds/hour soft limit, so the nightly sync will not count against that quota.
+
+**✅ Verify:** Run `node scripts/sync-salaries.js` locally, confirm `data/salaries.json` is rewritten correctly with a fresh `last_updated` date.
 
 ---
 
@@ -248,10 +380,13 @@ jobs:
 | Fetch Sleeper client-side | API is CORS-enabled, small responses, always current |
 | Don't call `/players/nfl` on load | It's 5MB; player names come from `salaries.json` instead |
 | Google Sheet CSV for auto-sync | Keeps salary source-of-truth where managers already edit it |
+| One file per turn | Prevents output truncation; every file is verifiable before proceeding |
+| `app.js` split into 5a/5b | Largest file — data layer and render layer are independently verifiable |
+| Named helper functions only | Makes truncation immediately visible; each function is a clear unit of work |
 
 ---
 
 ## Next Steps
 
-Build the full site — all files, the initial `salaries.json` seeded from roster data, the GitHub Action, and complete HTML/CSS/JS.
+Follow the **Turn Order** in the Build Execution Principles section above. Start with **Turn 1 — `js/config.js`** (fill in all 8 teams' `TEAM_COLORS`), then proceed in order. Verify each file before moving to the next turn.
 

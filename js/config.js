@@ -4,7 +4,8 @@
  * IMPORTANT: This app is READ-ONLY with respect to the Sleeper API.
  * No write operations are made. All data is fetched for display only.
  *
- * Step 4 of requirements.md — fill in TEAM_COLORS in that step.
+ * League: Big Cock Brock's Fantasy Palooza
+ * League ID: 1355351787401383936
  */
 
 const CONFIG = {
@@ -12,12 +13,23 @@ const CONFIG = {
   SALARY_CAP: 245,
 
   /**
-   * roster_id → { color: hex string, emoji: string, teamName: string }
-   * Team names and colors populated in Step 4.
+   * roster_id → { color, emoji, teamName }
+   *
+   * roster_id is the stable Sleeper key — never key on owner name.
+   * Owner display names and avatars are fetched live from the Sleeper API.
+   *
+   * Resolved via:
+   *   GET /v1/league/{id}/rosters  → roster_id → owner_id
+   *   GET /v1/league/{id}/users    → owner_id  → metadata.team_name
    */
   TEAM_COLORS: {
-    // Example — to be filled in Step 4:
-    // 1: { color: "#1565C0", emoji: "🟦", teamName: "The Dicktator" },
-    // 2: { color: "#6D4C41", emoji: "🟫", teamName: "Mr. Whatsitt??" },
-  }
+    1: { color: "#1565C0", emoji: "🟦", teamName: "The Dicktator" },
+    2: { color: "#2E7D32", emoji: "🟩", teamName: "#NewyearNewme" },
+    3: { color: "#F9A825", emoji: "🟨", teamName: "Unstoppable Thunderballs" },
+    4: { color: "#C8102E", emoji: "🟥", teamName: "Buffalo Buffalo" },
+    5: { color: "#6A1B9A", emoji: "🟪", teamName: "Kyle3000" },
+    6: { color: "#E65100", emoji: "🟧", teamName: "bringeroftables" },
+    7: { color: "#6D4C41", emoji: "🟫", teamName: "Mr. Whatsitt??" },
+    8: { color: "#AD1457", emoji: "🌸", teamName: "Your Mom's Favorite Team" },
+  },
 };

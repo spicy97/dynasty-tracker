@@ -3,55 +3,109 @@
  *
  * All calls are read-only GET requests. No authentication required.
  * Rate limit: stay under 1,000 calls/minute (we make 3 per page load).
- * Gracefully handles: 429 (rate limit), 500 (server error), 503 (maintenance).
  *
  * Avatar CDN:
  *   Full:      https://sleepercdn.com/avatars/<avatar_id>
- *   Thumbnail: https://sleepercdn.com/avatars/thumbs/<avatar_id>  ← use this in cards
+ *   Thumbnail: https://sleepercdn.com/avatars/thumbs/<avatar_id>  ← used in team cards
  *
- * Step 5 of requirements.md — logic to be filled in that step.
+ * This app is NOT affiliated with or endorsed by Sleeper.
  */
 
 const SLEEPER_BASE = "https://api.sleeper.app/v1";
 
 /**
- * Shared fetch wrapper — handles non-OK responses and network errors.
+ * Error class that carries the HTTP status code so callers can
+ * distinguish 429 / 500 / 503 from generic network failures.
+ */
+class SleeperApiError extends Error {
+  constructor(status, url) {
+    const messages = {
+      429: "Sleeper API rate limit reached (429) — please wait a moment and try again.",
+      500: "Sleeper API server error (500) — check back shortly.",
+      503: "Sleeper API is under maintenance (503) — check back shortly.",
+    };
+    super(messages[status] || `Sleeper API error ${status} for ${url}`);
+    this.status = status;
+    this.url = url;
+    this.name = "SleeperApiError";
+  }
+}
+
+/**
+ * Shared fetch wrapper.
+ * Throws SleeperApiError for 429 / 500 / 503 and any other non-OK status.
+ * Throws a plain Error for network-level failures (offline, DNS, etc.).
+ *
  * @param {string} url
- * @returns {Promise<any>}
+ * @returns {Promise<any>} Parsed JSON response
  */
 async function sleeperFetch(url) {
-  // TODO (Step 5): implement full error handling for 429 / 500 / 503
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Sleeper API error ${res.status} for ${url}`);
+  let res;
+  try {
+    res = await fetch(url);
+  } catch (networkErr) {
+    throw new Error(
+      "Unable to reach Sleeper — check your connection and try again."
+    );
   }
+
+  if (!res.ok) {
+    throw new SleeperApiError(res.status, url);
+  }
+
   return res.json();
 }
 
 /**
  * GET /v1/league/{league_id}
- * Returns league name, settings, status.
+ * Returns league name, season, status, and settings.
+ *
+ * @param {string} leagueId
+ * @returns {Promise<Object>}
  */
 async function fetchLeague(leagueId) {
-  // TODO (Step 5)
-  return null;
+  return sleeperFetch(`${SLEEPER_BASE}/league/${leagueId}`);
 }
 
 /**
  * GET /v1/league/{league_id}/users
- * Returns owner display names, team names, and avatar IDs.
+ * Returns an array of user objects with display_name, avatar, and
+ * metadata.team_name for each manager in the league.
+ *
+ * @param {string} leagueId
+ * @returns {Promise<Array>}
  */
 async function fetchUsers(leagueId) {
-  // TODO (Step 5)
-  return null;
+  return sleeperFetch(`${SLEEPER_BASE}/league/${leagueId}/users`);
 }
 
 /**
  * GET /v1/league/{league_id}/rosters
- * Returns player[], taxi[], reserve[], starters[] arrays per team.
- * NOTE: roster.players may be null during pre-draft / off-season — always guard.
+ * Returns an array of roster objects. Key fields per roster:
+ *   roster_id  {number}        — stable integer key
+ *   owner_id   {string}        — maps to user.user_id
+ *   players    {string[]|null} — all player IDs (null in pre-draft / off-season)
+ *   starters   {string[]}      — player IDs in starting slots
+ *   taxi       {string[]|null} — player IDs on taxi squad
+ *   reserve    {string[]|null} — player IDs on IR
+ *
+ * NOTE: players may be null — always guard before iterating.
+ *
+ * @param {string} leagueId
+ * @returns {Promise<Array>}
  */
 async function fetchRosters(leagueId) {
-  // TODO (Step 5)
-  return null;
+  return sleeperFetch(`${SLEEPER_BASE}/league/${leagueId}/rosters`);
+}
+
+/**
+ * Returns the thumbnail avatar URL for a given Sleeper avatar ID.
+ * Falls back to an empty string if no avatar ID is provided.
+ *
+ * @param {string|null} avatarId
+ * @returns {string}
+ */
+function avatarThumbUrl(avatarId) {
+  if (!avatarId) return "";
+  return `https://sleepercdn.com/avatars/thumbs/${avatarId}`;
 }

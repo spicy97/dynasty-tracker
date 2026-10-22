@@ -1,5 +1,6 @@
 # sync-salaries.yml
-# Nightly GitHub Action — downloads Google Sheet CSV and rebuilds data/salaries.json
+# Nightly GitHub Action — fetches the Google Sheet CSV + Sleeper rosters,
+# re-matches player names to Sleeper IDs, and rebuilds data/salaries.json.
 #
 # Step 9 of requirements.md.
 # NOTE: Custom Actions workflows are EXEMPT from the GitHub Pages
@@ -7,7 +8,7 @@
 #
 # Requirements before enabling:
 #   - Google Sheet must be publicly viewable (Share → Anyone with link → Viewer)
-#   - scripts/sync-salaries.js must exist and parse the CSV → salaries.json
+#   - scripts/build_salaries.py (Python 3, stdlib only — no pip installs needed)
 
 on:
   schedule:
@@ -20,17 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: '20'
+          python-version: '3.12'
 
-      - name: Sync salaries from Google Sheet
-        run: node scripts/sync-salaries.js
+      - name: Rebuild salaries.json from Google Sheet + Sleeper
+        run: python scripts/build_salaries.py
 
       - name: Commit updated salaries.json
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add data/salaries.json
-          git commit -m "chore: sync salaries from Google Sheet" || echo "No changes to commit"
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: sync salaries from Google Sheet"
           git push
