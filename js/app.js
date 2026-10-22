@@ -14,6 +14,8 @@
  *   5. Render team cards sorted by roster_id
  *   6. Render cap summary table
  *   7. Show "Last synced with Sleeper: [timestamp]"
+ *   8. Wire the header Refresh button → clears the sessionStorage cache
+ *      and re-runs steps 1–7 on demand
  *
  * KEY RULE: player_id is the canonical stable key — never use player name.
  */
@@ -31,6 +33,12 @@ function showError(message) {
   console.error("[dynasty-tracker]", message);
 }
 
+/** Hide the error banner (used on explicit refresh and successful loads). */
+function hideError() {
+  const banner = document.getElementById("error-banner");
+  if (banner) banner.classList.add("hidden");
+}
+
 /* ── Data loading ───────────────────────────────────────────────── */
 
 /** Fetch data/salaries.json (the salary source of truth). */
@@ -46,8 +54,15 @@ async function loadSalaries() {
  * Get Sleeper data from sessionStorage, or fetch it fresh.
  * Returns { league, users, rosters, fetchedAt }.
  * Throws SleeperApiError / Error on failure — caller shows the banner.
+ *
+ * @param {boolean} force — clear the cache first and re-hit the Sleeper
+ *        API (used by the header Refresh button).
  */
-async function loadSleeperData() {
+async function loadSleeperData(force = false) {
+  if (force) {
+    console.log("[dynasty-tracker] Refreshing Sleeper data (cache cleared)");
+    sessionStorage.removeItem(SESSION_KEY);
+  }
   const cached = sessionStorage.getItem(SESSION_KEY);
   if (cached) {
     try {
@@ -247,7 +262,12 @@ function renderTimestamp(fetchedAt) {
 
 /* ── Entry point ────────────────────────────────────────────────── */
 
-async function init() {
+/**
+ * Load all data and render the page (steps 1–7 above).
+ * @param {boolean} forceSleeperRefresh — clear the sessionStorage cache
+ *        and re-hit the Sleeper API before rendering.
+ */
+async function refreshApp(forceSleeperRefresh = false) {
   // 1. Salary source of truth (static file)
   let salaries;
   try {
@@ -258,10 +278,10 @@ async function init() {
   }
   const salaryMap = buildSalaryMap(salaries);
 
-  // 2. Live Sleeper data (cached per session)
+  // 2. Live Sleeper data (cached per session unless forced)
   let data;
   try {
-    data = await loadSleeperData();
+    data = await loadSleeperData(forceSleeperRefresh);
   } catch (err) {
     showError(err.message || "Unable to reach Sleeper — check back shortly.");
     return;
@@ -291,6 +311,39 @@ async function init() {
 
   // 7. Timestamp
   renderTimestamp(data.fetchedAt);
+
+  // A successful (re)load clears any error banner from a previous attempt
+  hideError();
+}
+
+/** Wire the header Refresh button → force a fresh Sleeper fetch + render. */
+function setupRefreshButton() {
+  const btn = document.getElementById("refresh-btn");
+  if (!btn) return;
+  const label = btn.querySelector(".refresh-label");
+
+  btn.addEventListener("click", async () => {
+    if (btn.disabled) return; // ignore clicks while a refresh is in flight
+    btn.disabled = true;
+    btn.classList.add("loading");
+    btn.setAttribute("aria-busy", "true");
+    if (label) label.textContent = "Refreshing…";
+    hideError();
+
+    try {
+      await refreshApp(true);
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove("loading");
+      btn.removeAttribute("aria-busy");
+      if (label) label.textContent = "Refresh";
+    }
+  });
+}
+
+async function init() {
+  setupRefreshButton();
+  await refreshApp();
 }
 
 document.addEventListener("DOMContentLoaded", init);

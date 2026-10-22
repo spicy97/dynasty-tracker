@@ -45,6 +45,45 @@ body {
   font-size: 0.95rem;
 }
 
+/* Header refresh button — re-fetches Sleeper data on demand */
+#refresh-btn {
+  margin-top: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 0.15s ease;
+}
+
+#refresh-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+#refresh-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+#refresh-btn .refresh-icon {
+  display: inline-block;
+  line-height: 1;
+}
+
+#refresh-btn.loading .refresh-icon {
+  animation: refresh-spin 0.9s linear infinite;
+}
+
+@keyframes refresh-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ── Error Banner ────────────────────────────────────────────── */
 #error-banner {
   background: #b71c1c;
