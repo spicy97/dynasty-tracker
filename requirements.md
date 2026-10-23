@@ -325,7 +325,7 @@ The stylesheet must include styles for:
 |---|---|---|
 | Player moves between teams | Sleeper API | ✅ Auto — rosters update live |
 | Player cut/added from waivers | Sleeper API | ✅ Auto — reflected in roster arrays |
-| New player added via waivers (name + cost) | Sleeper rosters + transactions + nightly `player_names.json` | ✅ Auto — name from `data/player_names.json`; cost = FAAB bid from `/transactions/{season}`, or `WAIVER_FALLBACK_COST` ($1) while bids are unavailable. A sheet salary always wins once entered |
+| New player added via waivers (name + cost) | Sleeper rosters + transactions + nightly `player_names.json` | ✅ Auto — name from `data/player_names.json`; cost = `WAIVER_SALARY_OVERRIDES` (manual, `config.js`) → FAAB bid from `/transactions/{season}` → `WAIVER_FALLBACK_COST` ($1) while bids are unavailable. A sheet salary always wins once entered |
 | Salary value changes (trades, extensions) | Google Sheet | 🖊️ Manual — update `salaries.json` |
 | New player salary assigned | Google Sheet | 🖊️ Manual — add entry to `salaries.json` |
 

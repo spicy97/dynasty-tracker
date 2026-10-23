@@ -8,9 +8,9 @@
  *      → If not: fetch all three endpoints in parallel; cache results
  *      → On API error: show error banner, halt render gracefully
  *   2b. For any rostered player missing from the sheet (waiver add):
- *      name from data/player_names.json, cost from the FAAB bid
- *      (transactions API) or CONFIG.WAIVER_FALLBACK_COST while bids
- *      are unavailable. Sheet salaries always win.
+ *      name/cost priority → CONFIG.WAIVER_SALARY_OVERRIDES (manual) →
+ *      FAAB bid (transactions API) → names file + WAIVER_FALLBACK_COST.
+ *      Sheet salaries always win once entered.
  *   3. Build lookup maps: roster_id → owner info, player_id → salary
  *   4. For each roster: classify players (starter/bench/taxi/IR),
  *      sum MAIN salaries (IR + taxi are cap-exempt, matching the sheet),
@@ -180,11 +180,14 @@ async function enrichWaiverAdds(salaryMap, data) {
   for (const pid of gapIds) {
     const info = (names && names[pid]) || {};
     const claim = bidMap.get(pid);
+    const assigned = CONFIG.WAIVER_SALARY_OVERRIDES
+      ? CONFIG.WAIVER_SALARY_OVERRIDES[pid]
+      : null;
     salaryMap.set(pid, {
-      name: info.name || `Player ${pid}`,
+      name: (assigned && assigned.name) || info.name || `Player ${pid}`,
       position: info.position || "—",
-      salary: claim ? claim.bid : CONFIG.WAIVER_FALLBACK_COST,
-      source: claim ? "waiver_bid" : "waiver_fallback",
+      salary: assigned ? assigned.salary : (claim ? claim.bid : CONFIG.WAIVER_FALLBACK_COST),
+      source: assigned ? "waiver_manual" : (claim ? "waiver_bid" : "waiver_fallback"),
     });
   }
   console.log(`[dynasty-tracker] Enriched ${gapIds.size} rostered player(s) missing from the salary sheet`);
@@ -292,9 +295,11 @@ function playerRow(pid, salaryMap) {
   // Tooltip so auto-derived waiver costs are visibly provisional
   const tip = entry && entry.source === "waiver_bid"
     ? ` title="Waiver claim — FAAB bid"`
-    : entry && entry.source === "waiver_fallback"
-      ? ` title="Waiver add — auto cost, pending bid or sheet entry"`
-      : "";
+    : entry && entry.source === "waiver_manual"
+      ? ` title="Waiver add — assigned salary (pending sheet entry)"`
+      : entry && entry.source === "waiver_fallback"
+        ? ` title="Waiver add — auto cost, pending bid or sheet entry"`
+        : "";
   return `<tr><td>${name}</td><td>${pos}</td><td class="num"${tip}>${salary}</td></tr>`;
 }
 

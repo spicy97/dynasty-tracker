@@ -21,6 +21,16 @@ const CONFIG = {
   WAIVER_FALLBACK_COST: 1,
 
   /**
+   * Manually assigned name/salary for waiver-added players who have no
+   * salary-sheet entry yet. Keyed by Sleeper player_id. Outranks both the
+   * FAAB bid and the fallback cost. Remove an entry once the sheet carries
+   * the player's real salary — the sheet then takes over permanently.
+   */
+  WAIVER_SALARY_OVERRIDES: {
+    1373: { name: "G. Smith", salary: 8 }, // Geno Smith (QB) — roster 8
+  },
+
+  /**
    * roster_id → { color, emoji, teamName }
    *
    * roster_id is the stable Sleeper key — never key on owner name.
