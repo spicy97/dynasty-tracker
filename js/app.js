@@ -7,6 +7,10 @@
  *      → If cached: use it (prevents redundant calls on tab refresh)
  *      → If not: fetch all three endpoints in parallel; cache results
  *      → On API error: show error banner, halt render gracefully
+ *   2b. For any rostered player missing from the sheet (waiver add):
+ *      name from data/player_names.json, cost from the FAAB bid
+ *      (transactions API) or CONFIG.WAIVER_FALLBACK_COST while bids
+ *      are unavailable. Sheet salaries always win.
  *   3. Build lookup maps: roster_id → owner info, player_id → salary
  *   4. For each roster: classify players (starter/bench/taxi/IR),
  *      sum MAIN salaries (IR + taxi are cap-exempt, matching the sheet),
@@ -21,6 +25,7 @@
  */
 
 const SESSION_KEY = "dynasty_tracker_sleeper_cache";
+const WAIVER_TXN_CACHE_KEY = "dynasty_tracker_waiver_txns";
 
 /* ── Error handling ─────────────────────────────────────────────── */
 
@@ -82,6 +87,107 @@ async function loadSleeperData(force = false) {
   const data = { league, users, rosters, fetchedAt: Date.now() };
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
   return data;
+}
+
+/* ── Waiver-add enrichment ────────────────────────────────────────── */
+
+/** Fetch data/player_names.json (nightly-generated name lookup). */
+async function loadPlayerNames() {
+  const res = await fetch("data/player_names.json");
+  if (!res.ok) {
+    throw new Error(`Failed to load player_names.json (${res.status})`);
+  }
+  return res.json();
+}
+
+/**
+ * Season transactions from sessionStorage, or fetch them fresh.
+ * Cached separately from the Sleeper bundle (fetched lazily — only when a
+ * rostered player is missing from the sheet).
+ */
+async function loadTransactions(season) {
+  const cached = sessionStorage.getItem(WAIVER_TXN_CACHE_KEY);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch {
+      sessionStorage.removeItem(WAIVER_TXN_CACHE_KEY); // corrupt cache — refetch
+    }
+  }
+  const txns = await fetchTransactions(CONFIG.LEAGUE_ID, season);
+  sessionStorage.setItem(WAIVER_TXN_CACHE_KEY, JSON.stringify(txns));
+  return txns;
+}
+
+/**
+ * player_id → { bid, created } from completed waiver claims.
+ * If a player was claimed more than once, the most recent claim wins.
+ * Claims without a numeric waiver_bid are skipped.
+ */
+function buildWaiverBidMap(transactions) {
+  const map = new Map();
+  for (const t of transactions) {
+    if (t.type !== "waiver" || t.status !== "complete" || !t.adds) continue;
+    const bid = t.settings && typeof t.settings.waiver_bid === "number"
+      ? t.settings.waiver_bid
+      : null;
+    if (bid === null) continue;
+    for (const pid of Object.keys(t.adds)) {
+      const prev = map.get(pid);
+      if (!prev || (t.created || 0) > prev.created) {
+        map.set(pid, { bid, created: t.created || 0 });
+      }
+    }
+  }
+  return map;
+}
+
+/**
+ * Fill salaryMap gaps for rostered players who have no sheet entry
+ * (players added via waiver claims between sheet syncs).
+ *
+ * Cost priority: FAAB bid from the transactions API → CONFIG.WAIVER_FALLBACK_COST.
+ * Name priority: data/player_names.json → "Player <id>".
+ * Both fetches are non-fatal — the page still renders without them.
+ */
+async function enrichWaiverAdds(salaryMap, data) {
+  // Gap = rostered player with no salary-sheet entry
+  const gapIds = new Set();
+  for (const r of data.rosters) {
+    for (const pid of r.players || []) {
+      if (!salaryMap.has(pid)) gapIds.add(pid);
+    }
+  }
+  if (gapIds.size === 0) return; // steady state — no extra fetches
+
+  let names = null;
+  try {
+    names = await loadPlayerNames();
+  } catch (err) {
+    console.warn("[dynasty-tracker] player_names.json unavailable", err);
+  }
+
+  let bidMap = new Map();
+  try {
+    const season = data.league && data.league.season;
+    if (season) {
+      bidMap = buildWaiverBidMap(await loadTransactions(season));
+    }
+  } catch (err) {
+    console.warn("[dynasty-tracker] transactions unavailable — using fallback waiver costs", err);
+  }
+
+  for (const pid of gapIds) {
+    const info = (names && names[pid]) || {};
+    const claim = bidMap.get(pid);
+    salaryMap.set(pid, {
+      name: info.name || `Player ${pid}`,
+      position: info.position || "—",
+      salary: claim ? claim.bid : CONFIG.WAIVER_FALLBACK_COST,
+      source: claim ? "waiver_bid" : "waiver_fallback",
+    });
+  }
+  console.log(`[dynasty-tracker] Enriched ${gapIds.size} rostered player(s) missing from the salary sheet`);
 }
 
 /* ── Lookup maps ────────────────────────────────────────────────── */
@@ -183,7 +289,13 @@ function playerRow(pid, salaryMap) {
   const name = entry ? entry.name : `Player ${pid}`;
   const pos = entry ? entry.position : "—";
   const salary = entry ? `$${entry.salary}` : "$0";
-  return `<tr><td>${name}</td><td>${pos}</td><td class="num">${salary}</td></tr>`;
+  // Tooltip so auto-derived waiver costs are visibly provisional
+  const tip = entry && entry.source === "waiver_bid"
+    ? ` title="Waiver claim — FAAB bid"`
+    : entry && entry.source === "waiver_fallback"
+      ? ` title="Waiver add — auto cost, pending bid or sheet entry"`
+      : "";
+  return `<tr><td>${name}</td><td>${pos}</td><td class="num"${tip}>${salary}</td></tr>`;
 }
 
 /** A labelled section of the card (Starters / Bench / IR / Taxi). */
@@ -268,6 +380,9 @@ function renderTimestamp(fetchedAt) {
  *        and re-hit the Sleeper API before rendering.
  */
 async function refreshApp(forceSleeperRefresh = false) {
+  if (forceSleeperRefresh) {
+    sessionStorage.removeItem(WAIVER_TXN_CACHE_KEY); // re-pull FAAB bids too
+  }
   // 1. Salary source of truth (static file)
   let salaries;
   try {
@@ -286,6 +401,9 @@ async function refreshApp(forceSleeperRefresh = false) {
     showError(err.message || "Unable to reach Sleeper — check back shortly.");
     return;
   }
+
+  // 2b. Auto-fill waiver-added players missing from the sheet
+  await enrichWaiverAdds(salaryMap, data);
 
   // 3. Header
   document.getElementById("league-name").textContent = data.league.name || "Dynasty Salary Tracker";

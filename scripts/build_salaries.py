@@ -8,6 +8,9 @@ player_id using the Sleeper /players/nfl dataset, and writes data/salaries.json.
 IMPORTANT: This script runs at BUILD TIME only (locally or in GitHub Actions).
 The browser app NEVER calls /players/nfl at runtime — player names are read
 from salaries.json instead (see requirements.md, Constraints section).
+It also emits data/player_names.json: a compact name/position lookup the
+client uses to display rostered players who have no salary row yet
+(e.g. players added via waiver claims between sheet updates).
 
 Usage:
     python scripts/build_salaries.py
@@ -52,6 +55,7 @@ COLUMN_BLOCKS = [
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_PATH = REPO_ROOT / "data" / "salaries.json"
+NAMES_OUTPUT_PATH = REPO_ROOT / "data" / "player_names.json"
 
 # ── Manual overrides ─────────────────────────────────────────────────────────
 # Name collisions or format differences the fuzzy matcher could not resolve.
@@ -274,12 +278,12 @@ def match_player(entry: dict, index: dict, roster_players: set):
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> int:
-    print("1/3 Fetching Sleeper player dataset (one-time, ~5 MB)…")
+    print("1/4 Fetching Sleeper player dataset (one-time, ~5 MB)…")
     raw = fetch_url(SLEEPER_PLAYERS_URL)
     sleeper_players = json.loads(raw)
     print(f"   Loaded {len(sleeper_players)} players.")
 
-    print("2/3 Fetching salary CSV and Sleeper rosters…")
+    print("2/4 Fetching salary CSV and Sleeper rosters…")
     csv_bytes = fetch_url(SHEET_CSV_URL)
     csv_text = csv_bytes.decode("utf-8-sig")
     entries = parse_salary_csv(csv_text)
@@ -297,7 +301,7 @@ def main() -> int:
         print("ERROR: No salary entries parsed — check sheet format.")
         return 1
 
-    print("3/3 Matching player names to Sleeper IDs…")
+    print("3/4 Matching player names to Sleeper IDs…")
     player_index = build_player_index(sleeper_players)
 
     players_out: dict = {}
@@ -331,6 +335,41 @@ def main() -> int:
 
     print(f"\n✅ Wrote {OUTPUT_PATH}")
     print(f"   {len(players_out)} players matched, {len(unmatched)} unmatched.")
+
+    # 4/4 — Compact name lookup for the browser client.
+    # The client must never call /players/nfl at runtime (requirements.md), so
+    # we emit player_id → {name, position} from the dataset loaded above.
+    # Covers every player Sleeper marks active, plus anyone currently rostered
+    # or in the salary sheet — waiver adds display real names immediately,
+    # even before their salary lands in the sheet.
+    print("\n4/4 Writing player name lookup (player_names.json)…")
+    rostered_ids = {pid for ids in roster_map.values() for pid in ids}
+    sheet_ids = set(players_out.keys())
+    names_out: dict = {}
+    for pid, p in sleeper_players.items():
+        if not (p.get("active") or pid in rostered_ids or pid in sheet_ids):
+            continue
+        name = p.get("full_name") or (
+            f"{p.get('first_name') or ''} {p.get('last_name') or ''}".strip()
+        )
+        if not name:
+            continue
+        names_out[pid] = {
+            "name": name,
+            "position": (p.get("position") or "").upper(),
+        }
+
+    def _name_sort_key(item):
+        pid = item[0]
+        return (0, int(pid), "") if pid.isdigit() else (1, 0, pid)
+
+    NAMES_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(NAMES_OUTPUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(dict(sorted(names_out.items(), key=_name_sort_key)),
+                  f, separators=(",", ":"), ensure_ascii=False)
+        f.write("\n")
+
+    print(f"✅ Wrote {NAMES_OUTPUT_PATH} ({len(names_out)} players)")
 
     if unmatched:
         print("\n⚠ UNMATCHED (stale sheet entries or new players — "

@@ -13,6 +13,14 @@ const CONFIG = {
   SALARY_CAP: 245,
 
   /**
+   * Auto cost applied to rostered players who have no salary-sheet entry
+   * (typically waiver adds) while no FAAB bid is available from the Sleeper
+   * transactions API. $1 = league waiver_bid_min (bids are always >= this).
+   * A real sheet salary or a fetched FAAB bid always wins over this.
+   */
+  WAIVER_FALLBACK_COST: 1,
+
+  /**
    * roster_id → { color, emoji, teamName }
    *
    * roster_id is the stable Sleeper key — never key on owner name.

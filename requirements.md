@@ -325,6 +325,7 @@ The stylesheet must include styles for:
 |---|---|---|
 | Player moves between teams | Sleeper API | ✅ Auto — rosters update live |
 | Player cut/added from waivers | Sleeper API | ✅ Auto — reflected in roster arrays |
+| New player added via waivers (name + cost) | Sleeper rosters + transactions + nightly `player_names.json` | ✅ Auto — name from `data/player_names.json`; cost = FAAB bid from `/transactions/{season}`, or `WAIVER_FALLBACK_COST` ($1) while bids are unavailable. A sheet salary always wins once entered |
 | Salary value changes (trades, extensions) | Google Sheet | 🖊️ Manual — update `salaries.json` |
 | New player salary assigned | Google Sheet | 🖊️ Manual — add entry to `salaries.json` |
 
@@ -378,7 +379,8 @@ jobs:
 | Static site (no server) | GitHub Pages free hosting, no backend needed |
 | `salaries.json` in repo | Sleeper has no salary data; this bridges the gap |
 | Fetch Sleeper client-side | API is CORS-enabled, small responses, always current |
-| Don't call `/players/nfl` on load | It's 5MB; player names come from `salaries.json` instead |
+| Don't call `/players/nfl` on load | It's 5MB; player names come from repo files — `salaries.json` plus `data/player_names.json`, both emitted at build time by the nightly Action |
+| FAAB bid as waiver-add cost | League uses FAAB (`waiver_type: 2`); bids are pulled lazily from `/transactions/{season}` only when a rostered player is missing from the sheet. Empty/failed responses fall back to `CONFIG.WAIVER_FALLBACK_COST` ($1 = `waiver_bid_min`) — no page failure |
 | Google Sheet CSV for auto-sync | Keeps salary source-of-truth where managers already edit it |
 | One file per turn | Prevents output truncation; every file is verifiable before proceeding |
 | `app.js` split into 5a/5b | Largest file — data layer and render layer are independently verifiable |

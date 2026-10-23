@@ -99,6 +99,24 @@ async function fetchRosters(leagueId) {
 }
 
 /**
+ * GET /v1/league/{league_id}/transactions/{season}
+ * Returns every transaction for the season (waivers, trades, adds/drops).
+ * We only care about completed waiver claims: settings.waiver_bid is the
+ * FAAB amount spent, used as the acquisition cost for rostered players who
+ * have no salary-sheet entry yet.
+ *
+ * NOTE: Sleeper has intermittently returned [] for this endpoint. Callers
+ * must treat an empty array as "no bid data" and fall back gracefully.
+ *
+ * @param {string} leagueId
+ * @param {string} season — e.g. "2026"
+ * @returns {Promise<Array>}
+ */
+async function fetchTransactions(leagueId, season) {
+  return sleeperFetch(`${SLEEPER_BASE}/league/${leagueId}/transactions/${season}`);
+}
+
+/**
  * Returns the thumbnail avatar URL for a given Sleeper avatar ID.
  * Falls back to an empty string if no avatar ID is provided.
  *
