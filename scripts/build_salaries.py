@@ -77,13 +77,6 @@ MANUAL_OVERRIDES = {
     ("penix", 6, 3):     "11559",  # Michael Penix Jr.     (QB, ATL)
     ("bain", 6, 2):      "13340",  # Rueben Bain Jr.       (DL, TB) — listed as "R. Bain IDP"
     ("jones", 8, 3):     "4199",   # Aaron Jones Sr.       (RB, MIN)
-    ("ward", 8, 8):      "1373",   # Geno Smith (QB, NYJ)  — sheet's "C. Ward $8" row; Ward left the roster, Smith now holds that spot and salary
-}
-
-# Display names for player_ids whose sheet row name is stale — the sheet
-# still lists the previous player in that roster slot (see MANUAL_OVERRIDES).
-NAME_FIXES = {
-    "1373": "Geno Smith",  # sheet row reads "C. Ward"; the rostered QB is Geno Smith
 }
 
 
@@ -322,7 +315,7 @@ def main() -> int:
             continue
 
         players_out[pid] = {
-            "name": NAME_FIXES.get(pid, entry["name"]),
+            "name": entry["name"],
             "position": entry["position"],
             "salary": entry["salary"],
             "roster_id": entry["roster_id"],
