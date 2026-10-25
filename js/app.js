@@ -20,6 +20,7 @@
  *   7. Show "Last synced with Sleeper: [timestamp]"
  *   8. Wire the header Refresh button → clears the sessionStorage cache
  *      and re-runs steps 1–7 on demand
+ *   9. Section table headers sort their rows in place (Player / Pos / Salary)
  *
  * KEY RULE: player_id is the canonical stable key — never use player name.
  */
@@ -286,12 +287,12 @@ function getTeamInfo(rosterId, owner) {
   return { ...colors, teamName, displayName, avatarUrl };
 }
 
-/** One player row: name | position | salary. */
+/** One player row: name | position | salary. Carries data-* for sorting. */
 function playerRow(pid, salaryMap) {
   const entry = salaryMap.get(pid);
   const name = entry ? entry.name : `Player ${pid}`;
   const pos = entry ? entry.position : "—";
-  const salary = entry ? `$${entry.salary}` : "$0";
+  const salary = entry ? entry.salary : 0;
   // Tooltip so auto-derived waiver costs are visibly provisional
   const tip = entry && entry.source === "waiver_bid"
     ? ` title="Waiver claim — FAAB bid"`
@@ -300,7 +301,8 @@ function playerRow(pid, salaryMap) {
       : entry && entry.source === "waiver_fallback"
         ? ` title="Waiver add — auto cost, pending bid or sheet entry"`
         : "";
-  return `<tr><td>${name}</td><td>${pos}</td><td class="num"${tip}>${salary}</td></tr>`;
+  return `<tr data-name="${name}" data-pos="${pos}" data-salary="${salary}">`
+    + `<td>${name}</td><td>${pos}</td><td class="num"${tip}>$${salary}</td></tr>`;
 }
 
 /** A labelled section of the card (Starters / Bench / IR / Taxi). */
@@ -311,10 +313,51 @@ function sectionTable(title, playerIds, salaryMap) {
     <details class="player-section" open>
       <summary>${title} <span class="count">(${playerIds.length})</span></summary>
       <table class="player-table">
-        <thead><tr><th>Player</th><th>Pos</th><th class="num">Salary</th></tr></thead>
+        <thead><tr>
+          <th class="sortable" data-sort="name" title="Click to sort">Player</th>
+          <th class="sortable" data-sort="pos" title="Click to sort">Pos</th>
+          <th class="sortable" data-sort="salary" title="Click to sort">Salary</th>
+        </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </details>`;
+}
+
+/* ── Section sorting ────────────────────────────────────────────── */
+
+/**
+ * Sort one player table's rows by column ("name" | "pos" | "salary").
+ * Clicking a header toggles ascending → descending → ascending.
+ * Salary sorts numerically (ties broken by name); text uses localeCompare.
+ */
+function sortSectionTable(th) {
+  const table = th.closest("table");
+  const tbody = table.tBodies[0];
+  const key = th.dataset.sort;
+  const dir = th.getAttribute("aria-sort") === "ascending" ? -1 : 1;
+
+  const rows = Array.from(tbody.rows);
+  rows.sort((a, b) => {
+    if (key === "salary") {
+      const diff = Number(a.dataset.salary) - Number(b.dataset.salary);
+      if (diff !== 0) return diff * dir;
+      return (a.dataset.name || "").localeCompare(b.dataset.name || "");
+    }
+    return (a.dataset[key] || "").localeCompare(b.dataset[key] || "") * dir;
+  });
+  for (const row of rows) tbody.appendChild(row);
+
+  // Indicator lives on this table's headers only
+  for (const h of table.tHead.rows[0].cells) h.removeAttribute("aria-sort");
+  th.setAttribute("aria-sort", dir === 1 ? "ascending" : "descending");
+}
+
+/** One delegated listener — keeps working across refresh re-renders. */
+function setupSorting() {
+  document.addEventListener("click", (e) => {
+    const th = e.target.closest("th.sortable");
+    if (th) sortSectionTable(th);
+  });
 }
 
 /** Full team card element for the grid. */
@@ -466,6 +509,7 @@ function setupRefreshButton() {
 
 async function init() {
   setupRefreshButton();
+  setupSorting();
   await refreshApp();
 }
 

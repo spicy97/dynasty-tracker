@@ -203,6 +203,24 @@ body {
   border-bottom: 1px solid #eee;
 }
 
+/* Sortable column headers (click to sort rows within a section) */
+.player-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.player-table th.sortable:hover {
+  color: #444;
+}
+
+.player-table th.sortable[aria-sort="ascending"]::after {
+  content: " ▲";
+}
+
+.player-table th.sortable[aria-sort="descending"]::after {
+  content: " ▼";
+}
+
 .player-table td {
   padding: 0.4rem 0.75rem;
   border-bottom: 1px solid #f0f0f0;
