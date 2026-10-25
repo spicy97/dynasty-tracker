@@ -317,13 +317,6 @@
       "roster_id": 6,
       "section": "main"
     },
-    "5947": {
-      "name": "J. Meyers",
-      "position": "WR",
-      "salary": 1,
-      "roster_id": 7,
-      "section": "main"
-    },
     "5967": {
       "name": "T. Pollard",
       "position": "RB",
@@ -524,13 +517,6 @@
       "name": "I. Likely",
       "position": "TE",
       "salary": 5,
-      "roster_id": 5,
-      "section": "main"
-    },
-    "8132": {
-      "name": "T. Allgeier",
-      "position": "RB",
-      "salary": 3,
       "roster_id": 5,
       "section": "main"
     },
