@@ -1,6 +1,7 @@
 # sync-salaries.yml
 # Nightly GitHub Action — fetches the Google Sheet CSV + Sleeper rosters,
-# re-matches player names to Sleeper IDs, and rebuilds data/salaries.json.
+# re-matches player names to Sleeper IDs, and rebuilds data/salaries.json
+# plus the data/player_names.json name lookup used by the browser app.
 #
 # Step 9 of requirements.md.
 # NOTE: Custom Actions workflows are EXEMPT from the GitHub Pages
@@ -28,11 +29,11 @@ jobs:
       - name: Rebuild salaries.json from Google Sheet + Sleeper
         run: python scripts/build_salaries.py
 
-      - name: Commit updated salaries.json
+      - name: Commit updated salary data
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add data/salaries.json
+          git add data/salaries.json data/player_names.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore: sync salaries from Google Sheet"
           git push
