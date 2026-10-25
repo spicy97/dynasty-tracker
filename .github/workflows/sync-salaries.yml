@@ -19,6 +19,8 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to push the rebuilt data back to main
     steps:
       - uses: actions/checkout@v4
 
