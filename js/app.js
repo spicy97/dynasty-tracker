@@ -7,10 +7,10 @@
  *      → If cached: use it (prevents redundant calls on tab refresh)
  *      → If not: fetch all three endpoints in parallel; cache results
  *      → On API error: show error banner, halt render gracefully
- *   2b. For any rostered player missing from the sheet (waiver add):
+ *   2b. FAAB salaries: latest completed waiver claim per player updates
+ *      that player's salary (bid overrides the old salary). Gap players:
  *      name/cost priority → CONFIG.WAIVER_SALARY_OVERRIDES (manual) →
- *      FAAB bid (transactions API) → names file + WAIVER_FALLBACK_COST.
- *      Sheet salaries always win once entered.
+ *      FAAB bid → names file + WAIVER_FALLBACK_COST.
  *   3. Build lookup maps: roster_id → owner info, player_id → salary
  *   4. For each roster: classify players (starter/bench/taxi/IR),
  *      sum MAIN salaries (IR + taxi are cap-exempt, matching the sheet),
@@ -144,30 +144,18 @@ function buildWaiverBidMap(transactions) {
 }
 
 /**
- * Fill salaryMap gaps for rostered players who have no sheet entry
- * (players added via waiver claims between sheet syncs).
+ * Apply FAAB salaries from recent waiver claims and fill salaryMap gaps.
  *
- * Cost priority: FAAB bid from the transactions API → CONFIG.WAIVER_FALLBACK_COST.
- * Name priority: data/player_names.json → "Player <id>".
- * Both fetches are non-fatal — the page still renders without them.
+ * 1. For EVERY rostered player with a completed waiver claim, the latest
+ *    claim's FAAB bid becomes their salary — even if they already have an
+ *    entry in salaries.json (a new claim replaces the old salary).
+ * 2. For gap players (no salaries.json entry), name comes from
+ *    player_names.json; cost priority = manual override → FAAB bid → fallback.
+ *
+ * Transactions are fetched on every load (bids apply league-wide), while
+ * player_names.json is only fetched when gaps exist. Both are non-fatal.
  */
 async function enrichWaiverAdds(salaryMap, data) {
-  // Gap = rostered player with no salary-sheet entry
-  const gapIds = new Set();
-  for (const r of data.rosters) {
-    for (const pid of r.players || []) {
-      if (!salaryMap.has(pid)) gapIds.add(pid);
-    }
-  }
-  if (gapIds.size === 0) return; // steady state — no extra fetches
-
-  let names = null;
-  try {
-    names = await loadPlayerNames();
-  } catch (err) {
-    console.warn("[dynasty-tracker] player_names.json unavailable", err);
-  }
-
   let bidMap = new Map();
   try {
     const season = data.league && data.league.season;
@@ -175,7 +163,36 @@ async function enrichWaiverAdds(salaryMap, data) {
       bidMap = buildWaiverBidMap(await loadTransactions(season));
     }
   } catch (err) {
-    console.warn("[dynasty-tracker] transactions unavailable — using fallback waiver costs", err);
+    console.warn("[dynasty-tracker] transactions unavailable — no FAAB salary updates", err);
+  }
+
+  // 1. FAAB bid overrides the previous salary for any rostered player claimed
+  for (const r of data.rosters) {
+    for (const pid of r.players || []) {
+      const claim = bidMap.get(pid);
+      if (!claim) continue;
+      const entry = salaryMap.get(pid);
+      if (entry) {
+        entry.salary = claim.bid;
+        entry.source = "waiver_bid";
+      }
+    }
+  }
+
+  // 2. Gap players (no salary entry at all)
+  const gapIds = new Set();
+  for (const r of data.rosters) {
+    for (const pid of r.players || []) {
+      if (!salaryMap.has(pid)) gapIds.add(pid);
+    }
+  }
+  if (gapIds.size === 0) return;
+
+  let names = null;
+  try {
+    names = await loadPlayerNames();
+  } catch (err) {
+    console.warn("[dynasty-tracker] player_names.json unavailable", err);
   }
 
   for (const pid of gapIds) {
