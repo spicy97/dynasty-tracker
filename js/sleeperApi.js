@@ -102,8 +102,8 @@ async function fetchRosters(leagueId) {
  * GET /v1/league/{league_id}/transactions/{season}
  * Returns every transaction for the season (waivers, trades, adds/drops).
  * We only care about completed waiver claims: settings.waiver_bid is the
- * FAAB amount spent, used as the acquisition cost for rostered players who
- * have no salary-sheet entry yet.
+ * FAAB amount spent. The latest claim for each rostered player overrides
+ * their baseline salary from salaries.json.
  *
  * NOTE: Sleeper has intermittently returned [] for this endpoint. Callers
  * must treat an empty array as "no bid data" and fall back gracefully.

@@ -13,25 +13,10 @@ const CONFIG = {
   SALARY_CAP: 245,
 
   /**
-   * Default cost for rostered players with no salary-sheet entry and no
-   * FAAB bid (typically fresh waiver adds). $0 = unassigned (no cap hit)
-   * until the commissioner assigns a salary — either inline on the page
-   * (saved in localStorage) or via WAIVER_SALARY_OVERRIDES below.
+   * Default cost for rostered players with no baseline salary entry and no
+   * completed waiver claim. $0 = no known salary and no cap hit.
    */
   WAIVER_FALLBACK_COST: 0,
-
-  /**
-   * Manually assigned name/salary for waiver-added players who have no
-   * salary-sheet entry yet. Keyed by Sleeper player_id. Outranks both the
-   * FAAB bid and the fallback cost. Remove an entry once the sheet carries
-   * the player's real salary — the sheet then takes over permanently.
-   * (You can also edit any waiver player's salary directly on the page;
-   * those edits are saved in your browser's localStorage and win over
-   * everything except a real entry in data/salaries.json.)
-   */
-  WAIVER_SALARY_OVERRIDES: {
-    1373: { name: "Geno Smith", salary: 8 }, // Geno Smith (QB) — roster 8
-  },
 
   /**
    * roster_id → { color, emoji, teamName }

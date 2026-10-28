@@ -9,10 +9,7 @@
  *      → On API error: show error banner, halt render gracefully
  *   2b. FAAB salaries: latest completed waiver claim per player updates
  *      that player's salary (bid overrides the old salary). Gap players:
- *      name/cost priority → CONFIG.WAIVER_SALARY_OVERRIDES (manual) →
- *      FAAB bid → names file + WAIVER_FALLBACK_COST.
- *   2c. Apply the commissioner's inline salary edits (localStorage) —
- *      gap players default to $0 until a salary is assigned on the page.
+ *      name from the names file; cost from FAAB bid → WAIVER_FALLBACK_COST.
  *   3. Build lookup maps: roster_id → owner info, player_id → salary
  *   4. For each roster: classify players (starter/bench/taxi/IR),
  *      sum MAIN salaries (IR + taxi are cap-exempt, matching the sheet),
@@ -29,11 +26,6 @@
 
 const SESSION_KEY = "dynasty_tracker_sleeper_cache";
 const WAIVER_TXN_CACHE_KEY = "dynasty_tracker_waiver_txns";
-const MANUAL_SALARY_KEY = "dynasty_tracker_manual_salaries";
-
-// Last rendered state — lets inline salary edits re-render without refetching
-let lastData = null;
-let lastSalaryMap = null;
 
 /* ── Error handling ─────────────────────────────────────────────── */
 
@@ -157,7 +149,7 @@ function buildWaiverBidMap(transactions) {
  *    claim's FAAB bid becomes their salary — even if they already have an
  *    entry in salaries.json (a new claim replaces the old salary).
  * 2. For gap players (no salaries.json entry), name comes from
- *    player_names.json; cost priority = manual override → FAAB bid → fallback.
+ *    player_names.json; cost = FAAB bid → fallback.
  *
  * Transactions are fetched on every load (bids apply league-wide), while
  * player_names.json is only fetched when gaps exist. Both are non-fatal.
@@ -205,14 +197,11 @@ async function enrichWaiverAdds(salaryMap, data) {
   for (const pid of gapIds) {
     const info = (names && names[pid]) || {};
     const claim = bidMap.get(pid);
-    const assigned = CONFIG.WAIVER_SALARY_OVERRIDES
-      ? CONFIG.WAIVER_SALARY_OVERRIDES[pid]
-      : null;
     salaryMap.set(pid, {
-      name: (assigned && assigned.name) || info.name || `Player ${pid}`,
+      name: info.name || `Player ${pid}`,
       position: info.position || "—",
-      salary: assigned ? assigned.salary : (claim ? claim.bid : CONFIG.WAIVER_FALLBACK_COST),
-      source: assigned ? "waiver_manual" : (claim ? "waiver_bid" : "waiver_fallback"),
+      salary: claim ? claim.bid : CONFIG.WAIVER_FALLBACK_COST,
+      source: claim ? "waiver_bid" : "waiver_fallback",
     });
   }
   console.log(`[dynasty-tracker] Enriched ${gapIds.size} rostered player(s) missing from the salary sheet`);
@@ -311,30 +300,19 @@ function getTeamInfo(rosterId, owner) {
   return { ...colors, teamName, displayName, avatarUrl };
 }
 
-/** One player row: name | position | salary. Carries data-* for sorting. */
+/** One read-only player row: name | position | salary. Carries data-* for sorting. */
 function playerRow(pid, salaryMap) {
   const entry = salaryMap.get(pid);
   const name = entry ? entry.name : `Player ${pid}`;
   const pos = entry ? entry.position : "—";
   const salary = entry ? entry.salary : 0;
-  const editableSources = ["waiver_bid", "waiver_manual", "waiver_fallback", "manual_edit"];
-  const editable = entry && editableSources.includes(entry.source);
-  // Tooltip so auto-derived waiver costs are visibly provisional
   const tip = entry && entry.source === "waiver_bid"
-    ? ` title="Waiver claim — FAAB bid (click to edit)"`
-    : entry && entry.source === "waiver_manual"
-      ? ` title="Waiver add — assigned salary (click to edit)"`
-      : entry && entry.source === "manual_edit"
-        ? ` title="Waiver add — salary you assigned (saved in this browser)"`
-        : entry && entry.source === "waiver_fallback"
-          ? ` title="Waiver add — no salary yet, click to assign one"`
-          : "";
-  // Waiver-added players get an editable salary input (saved in localStorage)
-  const salaryCell = editable
-    ? `<td class="num salary-edit"${tip}>$<input type="number" class="salary-input" data-pid="${pid}" min="0" step="1" value="${salary}" aria-label="Salary for ${name}"></td>`
-    : `<td class="num"${tip}>$${salary}</td>`;
+    ? ` title="Latest completed waiver claim — FAAB bid"`
+    : entry && entry.source === "waiver_fallback"
+      ? ` title="No baseline salary or completed waiver bid"`
+      : "";
   return `<tr data-name="${name}" data-pos="${pos}" data-salary="${salary}">`
-    + `<td>${name}</td><td>${pos}</td>${salaryCell}</tr>`;
+    + `<td>${name}</td><td>${pos}</td><td class="num"${tip}>$${salary}</td></tr>`;
 }
 
 /** A labelled section of the card (Starters / Bench / IR / Taxi). */
@@ -389,63 +367,6 @@ function setupSorting() {
   document.addEventListener("click", (e) => {
     const th = e.target.closest("th.sortable");
     if (th) sortSectionTable(th);
-  });
-}
-
-/* ── Inline salary editing (commissioner, saved in localStorage) ──── */
-
-/** Read { player_id: salary } saved by the commissioner in this browser. */
-function loadManualSalaries() {
-  try {
-    return JSON.parse(localStorage.getItem(MANUAL_SALARY_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-/** Persist one salary assignment (player_id → salary) in localStorage. */
-function saveManualSalary(pid, salary) {
-  const edits = loadManualSalaries();
-  edits[pid] = salary;
-  localStorage.setItem(MANUAL_SALARY_KEY, JSON.stringify(edits));
-}
-
-/**
- * Apply the commissioner's saved salary edits to rostered players.
- * Runs AFTER waiver enrichment so a manual edit outranks bids, fallbacks
- * and config overrides. A real entry in salaries.json is never overwritten
- * (only waiver-sourced entries are editable).
- */
-function applyManualSalaries(salaryMap, data) {
-  const edits = loadManualSalaries();
-  const editableSources = ["waiver_bid", "waiver_manual", "waiver_fallback", "manual_edit"];
-  for (const r of data.rosters) {
-    for (const pid of r.players || []) {
-      if (!(pid in edits)) continue;
-      const entry = salaryMap.get(pid);
-      if (entry && editableSources.includes(entry.source)) {
-        entry.salary = edits[pid];
-        entry.source = "manual_edit";
-      }
-    }
-  }
-}
-
-/** Delegated change handler for the salary <input> cells. */
-function setupSalaryEditing() {
-  document.addEventListener("change", (e) => {
-    const input = e.target.closest("input.salary-input");
-    if (!input || !lastData || !lastSalaryMap) return;
-    const pid = input.dataset.pid;
-    const salary = Math.max(0, Math.round(Number(input.value) || 0));
-    saveManualSalary(pid, salary);
-    const entry = lastSalaryMap.get(pid);
-    if (entry) {
-      entry.salary = salary;
-      entry.source = "manual_edit";
-    }
-    // Re-render cards + cap table from cached data — no network calls
-    renderRosterViews(lastData, lastSalaryMap);
   });
 }
 
@@ -539,15 +460,10 @@ async function refreshApp(forceSleeperRefresh = false) {
     return;
   }
 
-  // 2b. Auto-fill waiver-added players missing from the sheet
+  // 2b. Apply completed waiver bids and fill players missing from the baseline
   await enrichWaiverAdds(salaryMap, data);
 
-  // 2c. Apply the commissioner's inline salary edits (saved in this browser)
-  applyManualSalaries(salaryMap, data);
-
-  // 3–6. Header, team cards and cap table (also reused by inline edits)
-  lastData = data;
-  lastSalaryMap = salaryMap;
+  // 3–6. Header, team cards and cap table
   renderRosterViews(data, salaryMap);
 
   // 7. Timestamp
@@ -610,7 +526,6 @@ function setupRefreshButton() {
 async function init() {
   setupRefreshButton();
   setupSorting();
-  setupSalaryEditing();
   await refreshApp();
 }
 

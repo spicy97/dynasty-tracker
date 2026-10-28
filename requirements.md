@@ -325,11 +325,9 @@ The stylesheet must include styles for:
 |---|---|---|
 | Player moves between teams | Sleeper API | ✅ Auto — rosters update live |
 | Player cut/added from waivers | Sleeper API | ✅ Auto — reflected in roster arrays |
-| New player added via waivers (name + cost) | Sleeper rosters + transactions + nightly `player_names.json` | ✅ Auto — name from `data/player_names.json`; cost = `WAIVER_SALARY_OVERRIDES` (manual, `config.js`) → FAAB bid from `/transactions/{season}` → `WAIVER_FALLBACK_COST` ($0) while bids are unavailable. A salary in `data/salaries.json` always wins once added |
-| Waiver salary needs a manual value | Commissioner edits on the page | 🖊️ Manual — every waiver-added player's salary is an editable input; edits are saved in the browser's localStorage and outrank bids/fallbacks (gap players default to $0) |
+| New player added via waivers (name + cost) | Sleeper rosters + transactions + nightly `player_names.json` | ✅ Auto — name from `data/player_names.json`; cost = FAAB bid from `/transactions/{season}` → `WAIVER_FALLBACK_COST` ($0) while bids are unavailable |
 | FAAB claim updates an existing salary | Sleeper `/transactions/{season}` | ✅ Auto — the latest completed waiver claim per rostered player sets their salary to the bid (overrides the old salary from `data/salaries.json`) |
-| Salary value changes (trades, extensions) | `data/salaries.json` | 🖊️ Manual — edit the player's `salary` in the repo file |
-| New player salary assigned | `data/salaries.json` or `config.js` | 🖊️ Manual — add an entry to `data/salaries.json` (permanent) or `WAIVER_SALARY_OVERRIDES` (waiver adds) |
+| Baseline salary corrections | `data/salaries.json` | 🖊️ Repository update — change the baseline data in a new tracker revision; salaries are never editable on the page |
 
 ---
 
@@ -365,7 +363,7 @@ The stylesheet must include styles for:
 | `salaries.json` in repo | Sleeper has no salary data; the repo file is hand-maintained (no external feed) |
 | Fetch Sleeper client-side | API is CORS-enabled, small responses, always current |
 | Don't call `/players/nfl` on load | It's 5MB; player names come from repo files — `salaries.json` plus `data/player_names.json`, both emitted at build time by the nightly Action. Roster cards display **full first+last names from the Sleeper dataset** (abbreviated sheet names like "A. Rodgers" are replaced at build time) |
-| FAAB bid as waiver-add cost | League uses FAAB (`waiver_type: 2`); bids are pulled lazily from `/transactions/{season}` only when a rostered player is missing from the sheet. Empty/failed responses fall back to `CONFIG.WAIVER_FALLBACK_COST` ($0 = unassigned) — no page failure. The commissioner can assign salaries inline; edits persist in localStorage and outrank auto-derived values |
+| FAAB bid as waiver salary | League uses FAAB (`waiver_type: 2`); completed claims are pulled from `/transactions/{season}` and the latest claim per rostered player overrides the baseline salary. Missing bids fall back to `CONFIG.WAIVER_FALLBACK_COST` ($0 = unknown), while failed transaction requests leave baseline salaries unchanged. Salaries are display-only and never editable in the browser |
 | No external salary feed | The Google Sheet pipeline was retired; only roster/name/transaction data is pulled from Sleeper. Salaries are edited directly in `data/salaries.json` |
 | One file per turn | Prevents output truncation; every file is verifiable before proceeding |
 | `app.js` split into 5a/5b | Largest file — data layer and render layer are independently verifiable |
