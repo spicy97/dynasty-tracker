@@ -5,7 +5,7 @@
 A fully static site (no server required) hosted on **GitHub Pages** that:
 
 - Fetches live roster data from the **Sleeper API** on every page load
-- Reads salary data from a maintained `salaries.json` file in the repo (seeded from the Google Sheet)
+- Reads salary data from a manually maintained `salaries.json` file in the repo (no external salary feed — the Google Sheet pipeline was retired)
 - Merges both sources to display team rosters, salary totals, cap space, and IR/Taxi designations
 
 ---
@@ -325,50 +325,33 @@ The stylesheet must include styles for:
 |---|---|---|
 | Player moves between teams | Sleeper API | ✅ Auto — rosters update live |
 | Player cut/added from waivers | Sleeper API | ✅ Auto — reflected in roster arrays |
-| New player added via waivers (name + cost) | Sleeper rosters + transactions + nightly `player_names.json` | ✅ Auto — name from `data/player_names.json`; cost = `WAIVER_SALARY_OVERRIDES` (manual, `config.js`) → FAAB bid from `/transactions/{season}` → `WAIVER_FALLBACK_COST` ($1) while bids are unavailable. A sheet salary always wins once entered |
-| Salary value changes (trades, extensions) | Google Sheet | 🖊️ Manual — update `salaries.json` |
-| New player salary assigned | Google Sheet | 🖊️ Manual — add entry to `salaries.json` |
+| New player added via waivers (name + cost) | Sleeper rosters + transactions + nightly `player_names.json` | ✅ Auto — name from `data/player_names.json`; cost = `WAIVER_SALARY_OVERRIDES` (manual, `config.js`) → FAAB bid from `/transactions/{season}` → `WAIVER_FALLBACK_COST` ($1) while bids are unavailable. A salary in `data/salaries.json` always wins once added |
+| Salary value changes (trades, extensions) | `data/salaries.json` | 🖊️ Manual — edit the player's `salary` in the repo file |
+| New player salary assigned | `data/salaries.json` or `config.js` | 🖊️ Manual — add an entry to `data/salaries.json` (permanent) or `WAIVER_SALARY_OVERRIDES` (waiver adds) |
 
 ---
 
-## Step 9 — (Optional) GitHub Action for Auto-Sync
+## Step 9 — GitHub Action for Nightly Name Sync
 
-> **Turn 6** — `scripts/sync-salaries.js`. The workflow YAML (`.github/workflows/sync-salaries.yml`) is already complete.
+> The Google Sheet pipeline is retired. The only automated build step left is
+> refreshing `data/player_names.json` from Sleeper.
 
-**`.github/workflows/sync-salaries.yml`**
-
-```yaml
-on:
-  schedule:
-    - cron: '0 6 * * *'   # 6am UTC daily
-  workflow_dispatch:       # also allow manual trigger
-
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - run: node scripts/sync-salaries.js  # Downloads Sheet CSV, rebuilds salaries.json
-      - run: |
-          git config user.name "github-actions"
-          git add data/salaries.json
-          git commit -m "chore: sync salaries from Google Sheet" || echo "No changes"
-          git push
-```
+**`.github/workflows/sync-names.yml`** runs nightly (6am UTC) and on demand:
+1. `scripts/build_names.py` (Python stdlib only) fetches `/players/nfl` +
+   `/league/{id}/rosters` and writes `data/player_names.json`
+2. Commits and pushes the file if it changed (the job has
+   `permissions: contents: write` so `github-actions[bot]` can push)
 
 ### Requirements
 
-- Google Sheet must be **publicly viewable** (Share → Anyone with link → Viewer)
-- `scripts/sync-salaries.js` must:
-  - Accept the Google Sheet CSV export URL (hardcoded or via env var)
-  - Parse the CSV into the `salaries.json` schema
-  - Write the result to `data/salaries.json` with an updated `last_updated` field
-  - Use only Node.js built-ins (`https`, `fs`) — no npm dependencies
+- `scripts/build_names.py` uses only the Python standard library
+- No Google Sheet access is needed or used anywhere
+- `data/salaries.json` is maintained manually — it is never rebuilt
 
 > ✅ **GitHub Pages note:** Custom Actions workflows are **exempt** from the standard 10 builds/hour soft limit, so the nightly sync will not count against that quota.
 
-**✅ Verify:** Run `node scripts/sync-salaries.js` locally, confirm `data/salaries.json` is rewritten correctly with a fresh `last_updated` date.
+**✅ Verify:** Run `python scripts/build_names.py` locally, confirm
+`data/player_names.json` is rewritten with current names.
 
 ---
 
@@ -377,11 +360,11 @@ jobs:
 | Decision | Rationale |
 |---|---|
 | Static site (no server) | GitHub Pages free hosting, no backend needed |
-| `salaries.json` in repo | Sleeper has no salary data; this bridges the gap |
+| `salaries.json` in repo | Sleeper has no salary data; the repo file is hand-maintained (no external feed) |
 | Fetch Sleeper client-side | API is CORS-enabled, small responses, always current |
 | Don't call `/players/nfl` on load | It's 5MB; player names come from repo files — `salaries.json` plus `data/player_names.json`, both emitted at build time by the nightly Action. Roster cards display **full first+last names from the Sleeper dataset** (abbreviated sheet names like "A. Rodgers" are replaced at build time) |
 | FAAB bid as waiver-add cost | League uses FAAB (`waiver_type: 2`); bids are pulled lazily from `/transactions/{season}` only when a rostered player is missing from the sheet. Empty/failed responses fall back to `CONFIG.WAIVER_FALLBACK_COST` ($1 = `waiver_bid_min`) — no page failure |
-| Google Sheet CSV for auto-sync | Keeps salary source-of-truth where managers already edit it |
+| No external salary feed | The Google Sheet pipeline was retired; only roster/name/transaction data is pulled from Sleeper. Salaries are edited directly in `data/salaries.json` |
 | One file per turn | Prevents output truncation; every file is verifiable before proceeding |
 | `app.js` split into 5a/5b | Largest file — data layer and render layer are independently verifiable |
 | Named helper functions only | Makes truncation immediately visible; each function is a clear unit of work |

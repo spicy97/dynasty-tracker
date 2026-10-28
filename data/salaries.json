@@ -1,4 +1,5 @@
 {
+  "_note": "Manually maintained salary data. Not generated from any external source — edit this file to change salaries. Player names come from the Sleeper dataset.",
   "last_updated": "2026-10-28",
   "salary_cap": 245,
   "players": {

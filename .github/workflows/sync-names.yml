@@ -1,0 +1,39 @@
+# sync-names.yml
+# Nightly GitHub Action — refreshes data/player_names.json from the Sleeper
+# /players/nfl dataset (every active player + everyone currently rostered).
+#
+# Salary data (data/salaries.json) is maintained MANUALLY in the repo and is
+# never rebuilt from an external source — the old Google Sheet sync was
+# retired. Roster, name, and transaction data comes from Sleeper only.
+#
+# NOTE: Custom Actions workflows are EXEMPT from the GitHub Pages
+# 10 builds/hour soft limit, so this will not count against that quota.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 6am UTC daily
+  workflow_dispatch:       # also allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to push the rebuilt name file back to main
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Rebuild player_names.json from Sleeper
+        run: python scripts/build_names.py
+
+      - name: Commit updated name data
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data/player_names.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: sync player names from Sleeper"
+          git push
