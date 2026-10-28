@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-10-27",
+  "last_updated": "2026-10-28",
   "salary_cap": 245,
   "players": {
     "96": {
@@ -130,20 +130,6 @@
     },
     "3321": {
       "name": "T. Hill",
-      "position": "WR",
-      "salary": 1,
-      "roster_id": 7,
-      "section": "main"
-    },
-    "3451": {
-      "name": "K. Fairbairn",
-      "position": "K",
-      "salary": 1,
-      "roster_id": 3,
-      "section": "main"
-    },
-    "3634": {
-      "name": "K. Raymond",
       "position": "WR",
       "salary": 1,
       "roster_id": 7,
@@ -322,13 +308,6 @@
       "position": "RB",
       "salary": 11,
       "roster_id": 6,
-      "section": "main"
-    },
-    "6130": {
-      "name": "D. Singletary",
-      "position": "RB",
-      "salary": 1,
-      "roster_id": 2,
       "section": "main"
     },
     "6770": {
@@ -744,13 +723,6 @@
       "roster_id": 6,
       "section": "main"
     },
-    "9757": {
-      "name": "K. Miller",
-      "position": "RB",
-      "salary": 3,
-      "roster_id": 7,
-      "section": "main"
-    },
     "9758": {
       "name": "C.J. Stroud",
       "position": "QB",
@@ -784,13 +756,6 @@
       "position": "WR",
       "salary": 3,
       "roster_id": 1,
-      "section": "main"
-    },
-    "10235": {
-      "name": "R. Johnson",
-      "position": "RB",
-      "salary": 1,
-      "roster_id": 2,
       "section": "main"
     },
     "10236": {
@@ -1119,13 +1084,6 @@
       "name": "K. Monangui",
       "position": "RB",
       "salary": 3,
-      "roster_id": 4,
-      "section": "main"
-    },
-    "12536": {
-      "name": "J. Noel",
-      "position": "WR",
-      "salary": 1,
       "roster_id": 4,
       "section": "main"
     },
