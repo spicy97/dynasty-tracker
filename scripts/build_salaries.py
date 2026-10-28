@@ -314,8 +314,13 @@ def main() -> int:
             unmatched.append(entry)
             continue
 
+        # Display full first+last names from the Sleeper dataset (e.g.
+        # 'A. Rodgers' in the sheet becomes 'Aaron Rodgers'). The sheet
+        # remains the source for position, salary, roster and section;
+        # only the display name comes from Sleeper.
+        full_name = (sleeper_players.get(pid) or {}).get("full_name") or entry["name"]
         players_out[pid] = {
-            "name": entry["name"],
+            "name": full_name,
             "position": entry["position"],
             "salary": entry["salary"],
             "roster_id": entry["roster_id"],

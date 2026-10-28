@@ -27,7 +27,7 @@ const CONFIG = {
    * the player's real salary — the sheet then takes over permanently.
    */
   WAIVER_SALARY_OVERRIDES: {
-    1373: { name: "G. Smith", salary: 8 }, // Geno Smith (QB) — roster 8
+    1373: { name: "Geno Smith", salary: 8 }, // Geno Smith (QB) — roster 8
   },
 
   /**
