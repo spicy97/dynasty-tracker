@@ -3,721 +3,714 @@
   "salary_cap": 245,
   "players": {
     "96": {
-      "name": "A. Rodgers",
+      "name": "Aaron Rodgers",
       "position": "QB",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "421": {
-      "name": "M. Stafford",
+      "name": "Matthew Stafford",
       "position": "QB",
       "salary": 3,
       "roster_id": 3,
       "section": "main"
     },
     "1166": {
-      "name": "K. Cousins",
+      "name": "Kirk Cousins",
       "position": "QB",
       "salary": 1,
       "roster_id": 2,
       "section": "main"
     },
     "1466": {
-      "name": "T. Kelce",
+      "name": "Travis Kelce",
       "position": "TE",
       "salary": 4,
       "roster_id": 1,
       "section": "main"
     },
     "1479": {
-      "name": "K. Allen",
+      "name": "Keenan Allen",
       "position": "WR",
       "salary": 3,
       "roster_id": 6,
       "section": "main"
     },
     "1945": {
-      "name": "C. Boswell",
+      "name": "Chris Boswell",
       "position": "K",
       "salary": 1,
       "roster_id": 8,
       "section": "main"
     },
     "2020": {
-      "name": "C. Santos",
+      "name": "Cairo Santos",
       "position": "K",
       "salary": 1,
       "roster_id": 6,
       "section": "main"
     },
     "2133": {
-      "name": "D. Adams",
+      "name": "Davante Adams",
       "position": "WR",
       "salary": 6,
       "roster_id": 3,
       "section": "ir"
     },
     "2216": {
-      "name": "M. Evans",
+      "name": "Mike Evans",
       "position": "WR",
       "salary": 11,
       "roster_id": 6,
       "section": "main"
     },
     "2393": {
-      "name": "D. Hunter",
+      "name": "Danielle Hunter",
       "position": "IDP",
       "salary": 1,
       "roster_id": 6,
       "section": "main"
     },
     "2449": {
-      "name": "S. Diggs",
+      "name": "Stefon Diggs",
       "position": "WR",
       "salary": 3,
       "roster_id": 7,
       "section": "main"
     },
     "2505": {
-      "name": "D. Waller",
+      "name": "Darren Waller",
       "position": "TE",
       "salary": 1,
       "roster_id": 6,
       "section": "main"
     },
     "3163": {
-      "name": "J. Goff",
+      "name": "Jared Goff",
       "position": "QB",
       "salary": 5,
       "roster_id": 3,
       "section": "main"
     },
     "3198": {
-      "name": "D. Henry",
+      "name": "Derrick Henry",
       "position": "RB",
       "salary": 30,
       "roster_id": 2,
       "section": "main"
     },
     "3214": {
-      "name": "H. Henry",
+      "name": "Hunter Henry",
       "position": "TE",
       "salary": 5,
       "roster_id": 2,
       "section": "main"
     },
     "3257": {
-      "name": "J. Brissett",
+      "name": "Jacoby Brissett",
       "position": "QB",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "3271": {
-      "name": "T. Higbee",
+      "name": "Tyler Higbee",
       "position": "TE",
       "salary": 3,
       "roster_id": 8,
       "section": "main"
     },
     "3294": {
-      "name": "D. Prescott",
+      "name": "Dak Prescott",
       "position": "QB",
       "salary": 8,
       "roster_id": 8,
       "section": "main"
     },
     "3321": {
-      "name": "T. Hill",
+      "name": "Tyreek Hill",
       "position": "WR",
       "salary": 1,
       "roster_id": 7,
       "section": "main"
     },
-    "4017": {
-      "name": "D. Watson",
-      "position": "QB",
-      "salary": 1,
-      "roster_id": 5,
-      "section": "main"
-    },
     "4033": {
-      "name": "D. Njoku",
+      "name": "David Njoku",
       "position": "TE",
       "salary": 7,
       "roster_id": 6,
       "section": "main"
     },
     "4034": {
-      "name": "C. McCaffrey",
+      "name": "Christian McCaffrey",
       "position": "RB",
       "salary": 70,
       "roster_id": 4,
       "section": "main"
     },
     "4046": {
-      "name": "P. Mahomes",
+      "name": "Patrick Mahomes",
       "position": "QB",
       "salary": 23,
       "roster_id": 4,
       "section": "main"
     },
     "4070": {
-      "name": "T. Watt",
+      "name": "T.J. Watt",
       "position": "IDP",
       "salary": 7,
       "roster_id": 8,
       "section": "main"
     },
     "4199": {
-      "name": "A. Jones",
+      "name": "Aaron Jones Sr.",
       "position": "RB",
       "salary": 3,
       "roster_id": 8,
       "section": "main"
     },
     "4217": {
-      "name": "G. Kittle",
+      "name": "George Kittle",
       "position": "TE",
       "salary": 16,
       "roster_id": 5,
       "section": "main"
     },
     "4866": {
-      "name": "S. Barkley",
+      "name": "Saquon Barkley",
       "position": "RB",
       "salary": 38,
       "roster_id": 3,
       "section": "main"
     },
     "4881": {
-      "name": "L. Jackson",
+      "name": "Lamar Jackson",
       "position": "QB",
       "salary": 23,
       "roster_id": 3,
       "section": "main"
     },
     "4892": {
-      "name": "B. Mayfield",
+      "name": "Baker Mayfield",
       "position": "QB",
       "salary": 7,
       "roster_id": 5,
       "section": "main"
     },
     "4943": {
-      "name": "S. Darnold",
+      "name": "Sam Darnold",
       "position": "QB",
       "salary": 5,
       "roster_id": 2,
       "section": "main"
     },
     "4983": {
-      "name": "D. Moore",
+      "name": "DJ Moore",
       "position": "WR",
       "salary": 9,
       "roster_id": 8,
       "section": "main"
     },
     "4984": {
-      "name": "J. Allen",
+      "name": "Josh Allen",
       "position": "QB",
       "salary": 40,
       "roster_id": 6,
       "section": "main"
     },
     "5012": {
-      "name": "M. Andrews",
+      "name": "Mark Andrews",
       "position": "TE",
       "salary": 22,
       "roster_id": 6,
       "section": "main"
     },
     "5022": {
-      "name": "D. Goedert",
+      "name": "Dallas Goedert",
       "position": "TE",
       "salary": 1,
       "roster_id": 7,
       "section": "main"
     },
     "5041": {
-      "name": "F. Warner",
+      "name": "Fred Warner",
       "position": "IDP",
       "salary": 1,
       "roster_id": 4,
       "section": "main"
     },
     "5846": {
-      "name": "D. Metcalf",
+      "name": "DK Metcalf",
       "position": "WR",
       "salary": 16,
       "roster_id": 8,
       "section": "main"
     },
     "5849": {
-      "name": "K. Murray",
+      "name": "Kyler Murray",
       "position": "QB",
       "salary": 4,
       "roster_id": 5,
       "section": "main"
     },
     "5850": {
-      "name": "J. Jacobs",
+      "name": "Josh Jacobs",
       "position": "RB",
       "salary": 29,
       "roster_id": 2,
       "section": "main"
     },
     "5859": {
-      "name": "A. Brown",
+      "name": "A.J. Brown",
       "position": "WR",
       "salary": 43,
       "roster_id": 8,
       "section": "main"
     },
     "5870": {
-      "name": "D. Jones",
+      "name": "Daniel Jones",
       "position": "QB",
       "salary": 1,
       "roster_id": 3,
       "section": "main"
     },
     "5872": {
-      "name": "D. Samuel",
+      "name": "Deebo Samuel Sr.",
       "position": "WR",
       "salary": 15,
       "roster_id": 2,
       "section": "main"
     },
     "5892": {
-      "name": "D. Montgomery",
+      "name": "David Montgomery",
       "position": "RB",
       "salary": 7,
       "roster_id": 6,
       "section": "main"
     },
     "5927": {
-      "name": "T. McLaurin",
+      "name": "Terry McLaurin",
       "position": "WR",
       "salary": 23,
       "roster_id": 6,
       "section": "main"
     },
     "5967": {
-      "name": "T. Pollard",
+      "name": "Tony Pollard",
       "position": "RB",
       "salary": 11,
       "roster_id": 6,
       "section": "main"
     },
     "6770": {
-      "name": "J. Burrow",
+      "name": "Joe Burrow",
       "position": "QB",
       "salary": 18,
       "roster_id": 6,
       "section": "main"
     },
     "6786": {
-      "name": "C. Lamb",
+      "name": "CeeDee Lamb",
       "position": "WR",
       "salary": 42,
       "roster_id": 5,
       "section": "main"
     },
     "6790": {
-      "name": "D. Swift",
+      "name": "D'Andre Swift",
       "position": "RB",
       "salary": 5,
       "roster_id": 5,
       "section": "main"
     },
     "6794": {
-      "name": "J. Jefferson",
+      "name": "Justin Jefferson",
       "position": "WR",
       "salary": 73,
       "roster_id": 7,
       "section": "main"
     },
     "6801": {
-      "name": "T. Higgins",
+      "name": "Tee Higgins",
       "position": "WR",
       "salary": 14,
       "roster_id": 3,
       "section": "main"
     },
     "6804": {
-      "name": "J. Love",
+      "name": "Jordan Love",
       "position": "QB",
       "salary": 7,
       "roster_id": 7,
       "section": "main"
     },
     "6806": {
-      "name": "J. Dobbins",
+      "name": "J.K. Dobbins",
       "position": "RB",
       "salary": 2,
       "roster_id": 3,
       "section": "main"
     },
     "6813": {
-      "name": "J. Taylor",
+      "name": "Jonathan Taylor",
       "position": "RB",
       "salary": 37,
       "roster_id": 8,
       "section": "main"
     },
     "6904": {
-      "name": "J. Hurts",
+      "name": "Jalen Hurts",
       "position": "QB",
       "salary": 39,
       "roster_id": 6,
       "section": "main"
     },
     "7002": {
-      "name": "J. Johnson",
+      "name": "Juwan Johnson",
       "position": "TE",
       "salary": 9,
       "roster_id": 2,
       "section": "main"
     },
     "7021": {
-      "name": "R. Dowdle",
+      "name": "Rico Dowdle",
       "position": "RB",
       "salary": 4,
       "roster_id": 7,
       "section": "main"
     },
     "7523": {
-      "name": "T. Lawrence",
+      "name": "Trevor Lawrence",
       "position": "QB",
       "salary": 3,
       "roster_id": 7,
       "section": "main"
     },
     "7525": {
-      "name": "D. Smith",
+      "name": "DeVonta Smith",
       "position": "WR",
       "salary": 14,
       "roster_id": 4,
       "section": "main"
     },
     "7526": {
-      "name": "J. Waddle",
+      "name": "Jaylen Waddle",
       "position": "WR",
       "salary": 34,
       "roster_id": 2,
       "section": "main"
     },
     "7543": {
-      "name": "T. Etienne",
+      "name": "Travis Etienne Jr.",
       "position": "RB",
       "salary": 10,
       "roster_id": 1,
       "section": "ir"
     },
     "7547": {
-      "name": "A. St. Brown",
+      "name": "Amon-Ra St. Brown",
       "position": "WR",
       "salary": 39,
       "roster_id": 5,
       "section": "main"
     },
     "7564": {
-      "name": "J. Chase",
+      "name": "Ja'Marr Chase",
       "position": "WR",
       "salary": 56,
       "roster_id": 3,
       "section": "main"
     },
     "7569": {
-      "name": "N. Collins",
+      "name": "Nico Collins",
       "position": "WR",
       "salary": 7,
       "roster_id": 5,
       "section": "main"
     },
     "7588": {
-      "name": "J. Williams",
+      "name": "Javonte Williams",
       "position": "RB",
       "salary": 6,
       "roster_id": 3,
       "section": "main"
     },
     "7594": {
-      "name": "C. Hubbard",
+      "name": "Chuba Hubbard",
       "position": "RB",
       "salary": 1,
       "roster_id": 8,
       "section": "main"
     },
     "7600": {
-      "name": "P. Freiermuth",
+      "name": "Pat Freiermuth",
       "position": "TE",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "7611": {
-      "name": "R. Stevenson",
+      "name": "Rhamondre Stevenson",
       "position": "RB",
       "salary": 7,
       "roster_id": 8,
       "section": "main"
     },
     "7640": {
-      "name": "M. Parsons",
+      "name": "Micah Parsons",
       "position": "IDP",
       "salary": 1,
       "roster_id": 6,
       "section": "ir"
     },
     "7672": {
-      "name": "E. Jones IV",
+      "name": "Ernest Jones IV",
       "position": "IDP",
       "salary": 1,
       "roster_id": 3,
       "section": "main"
     },
     "8112": {
-      "name": "D. London",
+      "name": "Drake London",
       "position": "WR",
       "salary": 10,
       "roster_id": 5,
       "section": "main"
     },
     "8130": {
-      "name": "T. McBride",
+      "name": "Trey McBride",
       "position": "TE",
       "salary": 5,
       "roster_id": 7,
       "section": "main"
     },
     "8131": {
-      "name": "I. Likely",
+      "name": "Isaiah Likely",
       "position": "TE",
       "salary": 5,
       "roster_id": 5,
       "section": "main"
     },
     "8136": {
-      "name": "R. White",
+      "name": "Rachaad White",
       "position": "RB",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "8137": {
-      "name": "G. Pickens",
+      "name": "George Pickens",
       "position": "WR",
       "salary": 8,
       "roster_id": 8,
       "section": "main"
     },
     "8138": {
-      "name": "J. Cook",
+      "name": "James Cook III",
       "position": "RB",
       "salary": 9,
       "roster_id": 7,
       "section": "main"
     },
     "8142": {
-      "name": "A. Pierce",
+      "name": "Alec Pierce",
       "position": "WR",
       "salary": 3,
       "roster_id": 7,
       "section": "main"
     },
     "8144": {
-      "name": "C. Olave",
+      "name": "Chris Olave",
       "position": "WR",
       "salary": 33,
       "roster_id": 2,
       "section": "main"
     },
     "8146": {
-      "name": "G. Wilson",
+      "name": "Garrett Wilson",
       "position": "WR",
       "salary": 27,
       "roster_id": 1,
       "section": "main"
     },
     "8148": {
-      "name": "J. Williams",
+      "name": "Jameson Williams",
       "position": "WR",
       "salary": 5,
       "roster_id": 6,
       "section": "main"
     },
     "8150": {
-      "name": "K. Williams",
+      "name": "Kyren Williams",
       "position": "RB",
       "salary": 7,
       "roster_id": 1,
       "section": "main"
     },
     "8151": {
-      "name": "K. Walker",
+      "name": "Kenneth Walker III",
       "position": "RB",
       "salary": 18,
       "roster_id": 5,
       "section": "main"
     },
     "8154": {
-      "name": "B. Robinson Jr",
+      "name": "Brian Robinson Jr.",
       "position": "RB",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "8155": {
-      "name": "B. Hall",
+      "name": "Breece Hall",
       "position": "RB",
       "salary": 27,
       "roster_id": 5,
       "section": "main"
     },
     "8167": {
-      "name": "C. Watson",
+      "name": "Christian Watson",
       "position": "WR",
       "salary": 8,
       "roster_id": 8,
       "section": "main"
     },
     "8183": {
-      "name": "B. Purdy",
+      "name": "Brock Purdy",
       "position": "QB",
       "salary": 8,
       "roster_id": 7,
       "section": "main"
     },
     "8228": {
-      "name": "J. Warren",
+      "name": "Jaylen Warren",
       "position": "RB",
       "salary": 1,
       "roster_id": 7,
       "section": "main"
     },
     "8267": {
-      "name": "N. Dean",
+      "name": "Nakobe Dean",
       "position": "IDP",
       "salary": 1,
       "roster_id": 7,
       "section": "main"
     },
     "8329": {
-      "name": "D. Lloyd",
+      "name": "Devin Lloyd",
       "position": "IDP",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "8408": {
-      "name": "J. Mason",
+      "name": "Jordan Mason",
       "position": "RB",
       "salary": 2,
       "roster_id": 8,
       "section": "main"
     },
     "9221": {
-      "name": "J. Gibbs",
+      "name": "Jahmyr Gibbs",
       "position": "RB",
       "salary": 42,
       "roster_id": 1,
       "section": "main"
     },
     "9224": {
-      "name": "C. Brown",
+      "name": "Chase Brown",
       "position": "RB",
       "salary": 5,
       "roster_id": 3,
       "section": "main"
     },
     "9226": {
-      "name": "D. Achane",
+      "name": "De'Von Achane",
       "position": "RB",
       "salary": 7,
       "roster_id": 7,
       "section": "ir"
     },
     "9228": {
-      "name": "B. Young",
+      "name": "Bryce Young",
       "position": "QB",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "9480": {
-      "name": "B. Strange",
+      "name": "Brenton Strange",
       "position": "TE",
       "salary": 4,
       "roster_id": 3,
       "section": "main"
     },
     "9484": {
-      "name": "T. Kraft",
+      "name": "Tucker Kraft",
       "position": "TE",
       "salary": 5,
       "roster_id": 2,
       "section": "main"
     },
     "9487": {
-      "name": "P. Washington",
+      "name": "Parker Washington",
       "position": "WR",
       "salary": 8,
       "roster_id": 4,
       "section": "main"
     },
     "9488": {
-      "name": "J. Smith-Njigba",
+      "name": "Jaxon Smith-Njigba",
       "position": "WR",
       "salary": 15,
       "roster_id": 1,
       "section": "main"
     },
     "9493": {
-      "name": "P. Nacua",
+      "name": "Puka Nacua",
       "position": "WR",
       "salary": 7,
       "roster_id": 4,
       "section": "main"
     },
     "9500": {
-      "name": "J.Downs",
+      "name": "Josh Downs",
       "position": "WR",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "9502": {
-      "name": "T. Dell",
+      "name": "Tank Dell",
       "position": "WR",
       "salary": 1,
       "roster_id": 7,
       "section": "main"
     },
     "9508": {
-      "name": "T. Spears",
+      "name": "Tyjae Spears",
       "position": "RB",
       "salary": 7,
       "roster_id": 6,
       "section": "main"
     },
     "9509": {
-      "name": "B Robinson",
+      "name": "Bijan Robinson",
       "position": "RB",
       "salary": 59,
       "roster_id": 1,
       "section": "main"
     },
     "9753": {
-      "name": "Z. Charbonnet",
+      "name": "Zach Charbonnet",
       "position": "RB",
       "salary": 3,
       "roster_id": 4,
       "section": "ir"
     },
     "9756": {
-      "name": "J. Addison",
+      "name": "Jordan Addison",
       "position": "WR",
       "salary": 9,
       "roster_id": 6,
@@ -731,91 +724,91 @@
       "section": "main"
     },
     "9997": {
-      "name": "Z. Flowers",
+      "name": "Zay Flowers",
       "position": "WR",
       "salary": 8,
       "roster_id": 6,
       "section": "main"
     },
     "10213": {
-      "name": "T. Tucker",
+      "name": "Tre Tucker",
       "position": "WR",
       "salary": 4,
       "roster_id": 8,
       "section": "main"
     },
     "10229": {
-      "name": "R. Rice",
+      "name": "Rashee Rice",
       "position": "WR",
       "salary": 5,
       "roster_id": 5,
       "section": "main"
     },
     "10232": {
-      "name": "M. Wilson",
+      "name": "Michael Wilson",
       "position": "WR",
       "salary": 3,
       "roster_id": 1,
       "section": "main"
     },
     "10236": {
-      "name": "D. Kincaid",
+      "name": "Dalton Kincaid",
       "position": "TE",
       "salary": 11,
       "roster_id": 3,
       "section": "main"
     },
     "10859": {
-      "name": "S. LaPorta",
+      "name": "Sam LaPorta",
       "position": "TE",
       "salary": 7,
       "roster_id": 3,
       "section": "main"
     },
     "10892": {
-      "name": "W. Anderson",
+      "name": "Will Anderson Jr.",
       "position": "IDP",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "11435": {
-      "name": "E. Wilson",
+      "name": "Emanuel Wilson",
       "position": "RB",
       "salary": 1,
       "roster_id": 3,
       "section": "main"
     },
     "11533": {
-      "name": "B. Aubrey",
+      "name": "Brandon Aubrey",
       "position": "K",
       "salary": 1,
       "roster_id": 5,
       "section": "main"
     },
     "11559": {
-      "name": "M. Penix",
+      "name": "Michael Penix Jr.",
       "position": "QB",
       "salary": 3,
       "roster_id": 6,
       "section": "ir"
     },
     "11560": {
-      "name": "C. Williams",
+      "name": "Caleb Williams",
       "position": "QB",
       "salary": 3,
       "roster_id": 4,
       "section": "main"
     },
     "11563": {
-      "name": "B. Nix",
+      "name": "Bo Nix",
       "position": "QB",
       "salary": 5,
       "roster_id": 2,
       "section": "main"
     },
     "11564": {
-      "name": "D. Maye",
+      "name": "Drake Maye",
       "position": "QB",
       "salary": 3,
       "roster_id": 5,
@@ -829,434 +822,434 @@
       "section": "main"
     },
     "11566": {
-      "name": "J. Daniels",
+      "name": "Jayden Daniels",
       "position": "QB",
       "salary": 16,
       "roster_id": 8,
       "section": "main"
     },
     "11576": {
-      "name": "B. Allen",
+      "name": "Braelon Allen",
       "position": "RB",
       "salary": 3,
       "roster_id": 4,
       "section": "main"
     },
     "11584": {
-      "name": "B. Irving",
+      "name": "Bucky Irving",
       "position": "RB",
       "salary": 6,
       "roster_id": 8,
       "section": "main"
     },
     "11586": {
-      "name": "B. Corum",
+      "name": "Blake Corum",
       "position": "RB",
       "salary": 3,
       "roster_id": 1,
       "section": "main"
     },
     "11604": {
-      "name": "B. Bowers",
+      "name": "Brock Bowers",
       "position": "TE",
       "salary": 18,
       "roster_id": 1,
       "section": "main"
     },
     "11620": {
-      "name": "R. Odunze",
+      "name": "Rome Odunze",
       "position": "WR",
       "salary": 22,
       "roster_id": 6,
       "section": "main"
     },
     "11624": {
-      "name": "X. Worthy",
+      "name": "Xavier Worthy",
       "position": "WR",
       "salary": 1,
       "roster_id": 5,
       "section": "main"
     },
     "11625": {
-      "name": "A. Mitchell",
+      "name": "Adonai Mitchell",
       "position": "WR",
       "salary": 7,
       "roster_id": 1,
       "section": "taxi"
     },
     "11632": {
-      "name": "M. Nabers",
+      "name": "Malik Nabers",
       "position": "WR",
       "salary": 23,
       "roster_id": 7,
       "section": "main"
     },
     "11635": {
-      "name": "L. McConkey",
+      "name": "Ladd McConkey",
       "position": "WR",
       "salary": 19,
       "roster_id": 4,
       "section": "ir"
     },
     "11637": {
-      "name": "K. Coleman",
+      "name": "Keon Coleman",
       "position": "WR",
       "salary": 5,
       "roster_id": 8,
       "section": "main"
     },
     "11643": {
-      "name": "J. Wright",
+      "name": "Jaylen Wright",
       "position": "RB",
       "salary": 6,
       "roster_id": 2,
       "section": "taxi"
     },
     "11646": {
-      "name": "J. Coker",
+      "name": "Jalen Coker",
       "position": "WR",
       "salary": 1,
       "roster_id": 3,
       "section": "main"
     },
     "11792": {
-      "name": "W. Reichard",
+      "name": "Will Reichard",
       "position": "K",
       "salary": 1,
       "roster_id": 4,
       "section": "main"
     },
     "11834": {
-      "name": "D. Vele",
+      "name": "Devaughn Vele",
       "position": "WR",
       "salary": 2,
       "roster_id": 7,
       "section": "main"
     },
     "12185": {
-      "name": "S. Shrader",
+      "name": "Spencer Shrader",
       "position": "K",
       "salary": 1,
       "roster_id": 1,
       "section": "main"
     },
     "12474": {
-      "name": "W. Marks",
+      "name": "Woody Marks",
       "position": "RB",
       "salary": 4,
       "roster_id": 1,
       "section": "main"
     },
     "12481": {
-      "name": "C. Skattebo",
+      "name": "Cam Skattebo",
       "position": "RB",
       "salary": 9,
       "roster_id": 5,
       "section": "main"
     },
     "12484": {
-      "name": "J. Higgens",
+      "name": "Jayden Higgins",
       "position": "WR",
       "salary": 4,
       "roster_id": 1,
       "section": "ir"
     },
     "12485": {
-      "name": "T. Johnson",
+      "name": "Tez Johnson",
       "position": "WR",
       "salary": 1,
       "roster_id": 2,
       "section": "main"
     },
     "12489": {
-      "name": "R. Harvey",
+      "name": "RJ Harvey",
       "position": "RB",
       "salary": 13,
       "roster_id": 2,
       "section": "main"
     },
     "12490": {
-      "name": "B. Tuten",
+      "name": "Bhayshul Tuten",
       "position": "RB",
       "salary": 3,
       "roster_id": 4,
       "section": "main"
     },
     "12495": {
-      "name": "O. Gordon",
+      "name": "Ollie Gordon II",
       "position": "RB",
       "salary": 11,
       "roster_id": 1,
       "section": "main"
     },
     "12501": {
-      "name": "M. Golden",
+      "name": "Matthew Golden",
       "position": "WR",
       "salary": 12,
       "roster_id": 2,
       "section": "main"
     },
     "12506": {
-      "name": "H. Fannin",
+      "name": "Harold Fannin Jr.",
       "position": "TE",
       "salary": 3,
       "roster_id": 4,
       "section": "main"
     },
     "12507": {
-      "name": "O. Hampton",
+      "name": "Omarion Hampton",
       "position": "RB",
       "salary": 20,
       "roster_id": 3,
       "section": "main"
     },
     "12508": {
-      "name": "J. Dart",
+      "name": "Jaxson Dart",
       "position": "QB",
       "salary": 3,
       "roster_id": 7,
       "section": "ir"
     },
     "12509": {
-      "name": "T. Harris",
+      "name": "Tre' Harris",
       "position": "WR",
       "salary": 5,
       "roster_id": 1,
       "section": "taxi"
     },
     "12512": {
-      "name": "Q. Judkins",
+      "name": "Quinshon Judkins",
       "position": "RB",
       "salary": 17,
       "roster_id": 5,
       "section": "main"
     },
     "12514": {
-      "name": "E. Egbuka",
+      "name": "Emeka Egbuka",
       "position": "WR",
       "salary": 15,
       "roster_id": 3,
       "section": "main"
     },
     "12517": {
-      "name": "C. Loveland",
+      "name": "Colston Loveland",
       "position": "TE",
       "salary": 11,
       "roster_id": 4,
       "section": "main"
     },
     "12518": {
-      "name": "T. Warren",
+      "name": "Tyler Warren",
       "position": "TE",
       "salary": 14,
       "roster_id": 8,
       "section": "main"
     },
     "12519": {
-      "name": "L. Burden",
+      "name": "Luther Burden III",
       "position": "WR",
       "salary": 7,
       "roster_id": 2,
       "section": "main"
     },
     "12526": {
-      "name": "T. McMillan",
+      "name": "Tetairoa McMillan",
       "position": "WR",
       "salary": 18,
       "roster_id": 4,
       "section": "main"
     },
     "12527": {
-      "name": "A. Jeanty",
+      "name": "Ashton Jeanty",
       "position": "RB",
       "salary": 22,
       "roster_id": 4,
       "section": "main"
     },
     "12530": {
-      "name": "T. Hunter",
+      "name": "Travis Hunter",
       "position": "IDP",
       "salary": 7,
       "roster_id": 4,
       "section": "main"
     },
     "12534": {
-      "name": "K. Monangui",
+      "name": "Kyle Monangai",
       "position": "RB",
       "salary": 3,
       "roster_id": 4,
       "section": "main"
     },
     "12545": {
-      "name": "T. Shough",
+      "name": "Tyler Shough",
       "position": "QB",
       "salary": 3,
       "roster_id": 4,
       "section": "main"
     },
     "12711": {
-      "name": "T. Loop",
+      "name": "Tyler Loop",
       "position": "K",
       "salary": 1,
       "roster_id": 2,
       "section": "main"
     },
     "13269": {
-      "name": "F. Mendoza",
+      "name": "Fernando Mendoza",
       "position": "QB",
       "salary": 13,
       "roster_id": 8,
       "section": "taxi"
     },
     "13272": {
-      "name": "C. Beck",
+      "name": "Carson Beck",
       "position": "QB",
       "salary": 7,
       "roster_id": 4,
       "section": "taxi"
     },
     "13274": {
-      "name": "G. Bernard",
+      "name": "Germie Bernard",
       "position": "WR",
       "salary": 2,
       "roster_id": 4,
       "section": "main"
     },
     "13275": {
-      "name": "T. Simpson",
+      "name": "Ty Simpson",
       "position": "QB",
       "salary": 9,
       "roster_id": 3,
       "section": "taxi"
     },
     "13276": {
-      "name": "O. Cooper",
+      "name": "Omar Cooper Jr.",
       "position": "WR",
       "salary": 8,
       "roster_id": 5,
       "section": "taxi"
     },
     "13279": {
-      "name": "C. Tate",
+      "name": "Carnell Tate",
       "position": "WR",
       "salary": 19,
       "roster_id": 6,
       "section": "taxi"
     },
     "13281": {
-      "name": "J. Tyson",
+      "name": "Jordyn Tyson",
       "position": "WR",
       "salary": 17,
       "roster_id": 3,
       "section": "ir"
     },
     "13285": {
-      "name": "M. Fields",
+      "name": "Malachi Fields",
       "position": "WR",
       "salary": 1,
       "roster_id": 7,
       "section": "taxi"
     },
     "13286": {
-      "name": "J. Price",
+      "name": "Jadarian Price",
       "position": "RB",
       "salary": 16,
       "roster_id": 5,
       "section": "ir"
     },
     "13287": {
-      "name": "J. Love",
+      "name": "Jeremiyah Love",
       "position": "RB",
       "salary": 20,
       "roster_id": 8,
       "section": "main"
     },
     "13293": {
-      "name": "J. Lane",
+      "name": "Ja'Kobi Lane",
       "position": "WR",
       "salary": 1,
       "roster_id": 5,
       "section": "taxi"
     },
     "13294": {
-      "name": "M. Lemon",
+      "name": "Makai Lemon",
       "position": "WR",
       "salary": 18,
       "roster_id": 8,
       "section": "taxi"
     },
     "13296": {
-      "name": "C. Douglas",
+      "name": "Caleb Douglas",
       "position": "WR",
       "salary": 1,
       "roster_id": 1,
       "section": "taxi"
     },
     "13298": {
-      "name": "KC Concepcion",
+      "name": "KC Concepcion Jr.",
       "position": "WR",
       "salary": 15,
       "roster_id": 3,
       "section": "main"
     },
     "13301": {
-      "name": "A. Williams",
+      "name": "Antonio Williams",
       "position": "WR",
       "salary": 1,
       "roster_id": 3,
       "section": "main"
     },
     "13305": {
-      "name": "M. Washington",
+      "name": "Mike Washington Jr.",
       "position": "RB",
       "salary": 8,
       "roster_id": 4,
       "section": "main"
     },
     "13306": {
-      "name": "T. Green",
+      "name": "Taylen Green",
       "position": "QB",
       "salary": 1,
       "roster_id": 4,
       "section": "taxi"
     },
     "13330": {
-      "name": "K. Sadiq",
+      "name": "Kenyon Sadiq",
       "position": "TE",
       "salary": 4,
       "roster_id": 2,
       "section": "main"
     },
     "13337": {
-      "name": "E. Johnson",
+      "name": "Emmett Johnson",
       "position": "RB",
       "salary": 1,
       "roster_id": 5,
       "section": "main"
     },
     "13340": {
-      "name": "R. Bain",
+      "name": "Rueben Bain Jr.",
       "position": "IDP",
       "salary": 2,
       "roster_id": 6,
       "section": "taxi"
     },
     "13345": {
-      "name": "J. Coleman",
+      "name": "Jonah Coleman",
       "position": "RB",
       "salary": 12,
       "roster_id": 3,
       "section": "taxi"
     },
     "13346": {
-      "name": "D. Boston",
+      "name": "Denzel Boston",
       "position": "WR",
       "salary": 11,
       "roster_id": 5,
       "section": "taxi"
     },
     "13349": {
-      "name": "E. Stowers",
+      "name": "Eli Stowers",
       "position": "TE",
       "salary": 6,
       "roster_id": 4,
@@ -1270,35 +1263,35 @@
       "section": "taxi"
     },
     "13375": {
-      "name": "S. Styles",
+      "name": "Sonny Styles",
       "position": "IDP",
       "salary": 3,
       "roster_id": 8,
       "section": "taxi"
     },
     "13376": {
-      "name": "C. Downs",
+      "name": "Caleb Downs",
       "position": "IDP",
       "salary": 12,
       "roster_id": 2,
       "section": "main"
     },
     "13377": {
-      "name": "A. Reese",
+      "name": "Arvell Reese",
       "position": "IDP",
       "salary": 1,
       "roster_id": 2,
       "section": "main"
     },
     "13414": {
-      "name": "K. Black",
+      "name": "Kaelon Black",
       "position": "RB",
       "salary": 1,
       "roster_id": 4,
       "section": "main"
     },
     "13417": {
-      "name": "D. Stribling",
+      "name": "De'Zhaun Stribling",
       "position": "WR",
       "salary": 10,
       "roster_id": 3,
