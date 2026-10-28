@@ -26,6 +26,7 @@
 
 const SESSION_KEY = "dynasty_tracker_sleeper_cache";
 const WAIVER_TXN_CACHE_KEY = "dynasty_tracker_waiver_txns";
+const SAVED_SALARY_KEY = "dynasty_tracker_manual_salaries";
 
 /* ── Error handling ─────────────────────────────────────────────── */
 
@@ -308,9 +309,11 @@ function playerRow(pid, salaryMap) {
   const salary = entry ? entry.salary : 0;
   const tip = entry && entry.source === "waiver_bid"
     ? ` title="Latest completed waiver claim — FAAB bid"`
-    : entry && entry.source === "waiver_fallback"
-      ? ` title="No baseline salary or completed waiver bid"`
-      : "";
+    : entry && entry.source === "saved_salary"
+      ? ` title="Previously saved salary (read-only)"`
+      : entry && entry.source === "waiver_fallback"
+        ? ` title="No baseline salary or completed waiver bid"`
+        : "";
   return `<tr data-name="${name}" data-pos="${pos}" data-salary="${salary}">`
     + `<td>${name}</td><td>${pos}</td><td class="num"${tip}>$${salary}</td></tr>`;
 }
@@ -368,6 +371,35 @@ function setupSorting() {
     const th = e.target.closest("th.sortable");
     if (th) sortSectionTable(th);
   });
+}
+
+/* ── Previously saved salaries (read-only) ──────────────────────── */
+
+/**
+ * Preserve salaries entered before the page became read-only.
+ * Only existing waiver-sourced entries are eligible, matching the fields
+ * that were previously editable. This function never writes to storage.
+ */
+function applySavedSalaries(salaryMap, data) {
+  let saved;
+  try {
+    saved = JSON.parse(localStorage.getItem(SAVED_SALARY_KEY) || "{}");
+  } catch {
+    return;
+  }
+
+  for (const r of data.rosters) {
+    for (const pid of r.players || []) {
+      if (!Object.hasOwn(saved, pid)) continue;
+      const entry = salaryMap.get(pid);
+      const salary = saved[pid];
+      if (entry && ["waiver_bid", "waiver_fallback"].includes(entry.source)
+        && typeof salary === "number" && Number.isFinite(salary) && salary >= 0) {
+        entry.salary = salary;
+        entry.source = "saved_salary";
+      }
+    }
+  }
 }
 
 /** Full team card element for the grid. */
@@ -462,6 +494,9 @@ async function refreshApp(forceSleeperRefresh = false) {
 
   // 2b. Apply completed waiver bids and fill players missing from the baseline
   await enrichWaiverAdds(salaryMap, data);
+
+  // 2c. Restore values entered before salary fields became read-only
+  applySavedSalaries(salaryMap, data);
 
   // 3–6. Header, team cards and cap table
   renderRosterViews(data, salaryMap);

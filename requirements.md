@@ -327,6 +327,7 @@ The stylesheet must include styles for:
 | Player cut/added from waivers | Sleeper API | ✅ Auto — reflected in roster arrays |
 | New player added via waivers (name + cost) | Sleeper rosters + transactions + nightly `player_names.json` | ✅ Auto — name from `data/player_names.json`; cost = FAAB bid from `/transactions/{season}` → `WAIVER_FALLBACK_COST` ($0) while bids are unavailable |
 | FAAB claim updates an existing salary | Sleeper `/transactions/{season}` | ✅ Auto — the latest completed waiver claim per rostered player sets their salary to the bid (overrides the old salary from `data/salaries.json`) |
+| Previously entered waiver salaries | Browser `localStorage` | ✅ Preserved — values entered before salaries became read-only are loaded for display in that browser and take precedence over derived waiver values; no new values can be entered on the page |
 | Baseline salary corrections | `data/salaries.json` | 🖊️ Repository update — change the baseline data in a new tracker revision; salaries are never editable on the page |
 
 ---
