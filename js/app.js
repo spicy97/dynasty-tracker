@@ -7,9 +7,10 @@
  *      → If cached: use it (prevents redundant calls on tab refresh)
  *      → If not: fetch all three endpoints in parallel; cache results
  *      → On API error: show error banner, halt render gracefully
- *   2b. FAAB salaries: latest completed waiver claim per player updates
- *      that player's salary (bid overrides the old salary). Gap players:
- *      name from the names file; cost from FAAB bid → WAIVER_FALLBACK_COST.
+ *   2b. FAAB salaries: fetch weeks 1–18 and replay completed acquisitions.
+ *      Winning waiver bids update salaries; trades preserve acquisition cost.
+ *      Later bid-less adds do not reuse old claims. Gap players use the names
+ *      file and show an unknown salary until a reliable value is available.
  *   3. Build lookup maps: roster_id → owner info, player_id → salary
  *   4. For each roster: classify players (starter/bench/taxi/IR),
  *      sum MAIN salaries (IR + taxi are cap-exempt, matching the sheet),
@@ -25,7 +26,7 @@
  */
 
 const SESSION_KEY = "dynasty_tracker_sleeper_cache";
-const WAIVER_TXN_CACHE_KEY = "dynasty_tracker_waiver_txns";
+const WAIVER_TXN_CACHE_KEY = "dynasty_tracker_transactions_v2";
 const SAVED_SALARY_KEY = "dynasty_tracker_manual_salaries";
 
 /* ── Error handling ─────────────────────────────────────────────── */
@@ -102,68 +103,123 @@ async function loadPlayerNames() {
 }
 
 /**
- * Season transactions from sessionStorage, or fetch them fresh.
- * Cached separately from the Sleeper bundle (fetched lazily — only when a
- * rostered player is missing from the sheet).
+ * Full-season transactions from sessionStorage, or fetch every NFL week.
+ * The v2 cache key prevents the retired /transactions/{season} empty response
+ * from being reused. Empty weekly arrays are valid and remain in the history.
  */
-async function loadTransactions(season) {
+async function loadTransactions() {
   const cached = sessionStorage.getItem(WAIVER_TXN_CACHE_KEY);
   if (cached) {
     try {
-      return JSON.parse(cached);
+      const txns = JSON.parse(cached);
+      if (Array.isArray(txns)) return txns;
     } catch {
-      sessionStorage.removeItem(WAIVER_TXN_CACHE_KEY); // corrupt cache — refetch
+      // Corrupt cache — refetch below.
     }
+    sessionStorage.removeItem(WAIVER_TXN_CACHE_KEY);
   }
-  const txns = await fetchTransactions(CONFIG.LEAGUE_ID, season);
+  const txns = await fetchSeasonTransactions(CONFIG.LEAGUE_ID);
   sessionStorage.setItem(WAIVER_TXN_CACHE_KEY, JSON.stringify(txns));
   return txns;
 }
 
-/**
- * player_id → { bid, created } from completed waiver claims.
- * If a player was claimed more than once, the most recent claim wins.
- * Claims without a numeric waiver_bid are skipped.
- */
-function buildWaiverBidMap(transactions) {
-  const map = new Map();
-  for (const t of transactions) {
-    if (t.type !== "waiver" || t.status !== "complete" || !t.adds) continue;
-    const bid = t.settings && typeof t.settings.waiver_bid === "number"
-      ? t.settings.waiver_bid
-      : null;
-    if (bid === null) continue;
-    for (const pid of Object.keys(t.adds)) {
-      const prev = map.get(pid);
-      if (!prev || (t.created || 0) > prev.created) {
-        map.set(pid, { bid, created: t.created || 0 });
-      }
-    }
+/** Completed transactions in acquisition order, without mutating the input. */
+function completedTransactionsOldestFirst(transactions) {
+  return transactions
+    .map((transaction, index) => ({ transaction, index }))
+    .filter(({ transaction: t }) => t && t.status === "complete")
+    .sort((a, b) => ((a.transaction.created || 0) - (b.transaction.created || 0))
+      || (a.index - b.index))
+    .map(({ transaction }) => transaction);
+}
+
+/** Remove dropped players only from the roster recorded by the transaction. */
+function removeDroppedPlayers(ownership, drops) {
+  for (const [pid, rosterId] of Object.entries(drops || {})) {
+    const current = ownership.get(pid);
+    if (current && current.rosterId === Number(rosterId)) ownership.delete(pid);
   }
-  return map;
+}
+
+/** Apply a trade atomically so an existing acquisition cost moves with it. */
+function applyTrade(ownership, transaction) {
+  const beforeTrade = new Map(ownership);
+  removeDroppedPlayers(ownership, transaction.drops);
+
+  for (const [pid, rosterId] of Object.entries(transaction.adds || {})) {
+    const previous = beforeTrade.get(pid);
+    const droppedFrom = transaction.drops && transaction.drops[pid];
+    const canCarrySalary = previous && droppedFrom !== undefined
+      && previous.rosterId === Number(droppedFrom);
+    ownership.set(pid, {
+      rosterId: Number(rosterId),
+      bid: canCarrySalary ? previous.bid : null,
+      source: canCarrySalary ? previous.source : "unknown",
+      created: canCarrySalary ? previous.created : transaction.created || 0,
+    });
+  }
+}
+
+/** Apply a waiver, free-agent, or commissioner add after processing its drops. */
+function applyAcquisition(ownership, transaction) {
+  removeDroppedPlayers(ownership, transaction.drops);
+  const rawBid = transaction.settings && transaction.settings.waiver_bid;
+  const hasBid = transaction.type === "waiver" && typeof rawBid === "number"
+    && Number.isFinite(rawBid) && rawBid >= 0;
+
+  for (const [pid, rosterId] of Object.entries(transaction.adds || {})) {
+    ownership.set(pid, {
+      rosterId: Number(rosterId),
+      bid: hasBid ? rawBid : null,
+      source: hasBid ? "waiver_bid" : "unknown",
+      created: transaction.created || 0,
+    });
+  }
 }
 
 /**
- * Apply FAAB salaries from recent waiver claims and fill salaryMap gaps.
+ * player_id → { bid, created, rosterId } for current FAAB acquisitions.
  *
- * 1. For EVERY rostered player with a completed waiver claim, the latest
- *    claim's FAAB bid becomes their salary — even if they already have an
- *    entry in salaries.json (a new claim replaces the old salary).
- * 2. For gap players (no salaries.json entry), name comes from
- *    player_names.json; cost = FAAB bid → fallback.
- *
- * Transactions are fetched on every load (bids apply league-wide), while
- * player_names.json is only fetched when gaps exist. Both are non-fatal.
+ * Replaying all adds/drops prevents an old claim from leaking onto a later
+ * free-agent add. Trades are atomic and carry an existing waiver salary to
+ * the receiving roster. Players with no applicable bid are absent, allowing
+ * salaries.json to remain their baseline source of truth.
+ */
+function buildWaiverBidMap(transactions, rosters) {
+  const ownership = new Map();
+  for (const transaction of completedTransactionsOldestFirst(transactions)) {
+    if (transaction.type === "trade") applyTrade(ownership, transaction);
+    else applyAcquisition(ownership, transaction);
+  }
+
+  const bidMap = new Map();
+  for (const roster of rosters) {
+    for (const pid of roster.players || []) {
+      const current = ownership.get(pid);
+      if (!current || current.rosterId !== Number(roster.roster_id)
+        || current.source !== "waiver_bid" || current.bid === null) continue;
+      bidMap.set(pid, {
+        bid: current.bid,
+        created: current.created,
+        rosterId: current.rosterId,
+      });
+    }
+  }
+  return bidMap;
+}
+
+/**
+ * Apply FAAB salaries from the replayed transaction history and fill gaps.
+ * A transaction failure is non-fatal: baseline salaries remain untouched.
+ * Gap players use player_names.json and display an unknown salary until a
+ * baseline value, saved value, or applicable winning FAAB bid is available.
  */
 async function enrichWaiverAdds(salaryMap, data) {
   let bidMap = new Map();
   try {
-    const season = data.league && data.league.season;
-    if (season) {
-      bidMap = buildWaiverBidMap(await loadTransactions(season));
-    }
+    bidMap = buildWaiverBidMap(await loadTransactions(), data.rosters);
   } catch (err) {
-    console.warn("[dynasty-tracker] transactions unavailable — no FAAB salary updates", err);
+    console.warn("[dynasty-tracker] transactions unavailable — retaining baseline salaries", err);
   }
 
   // 1. FAAB bid overrides the previous salary for any rostered player claimed
@@ -201,7 +257,7 @@ async function enrichWaiverAdds(salaryMap, data) {
     salaryMap.set(pid, {
       name: info.name || `Player ${pid}`,
       position: info.position || "—",
-      salary: claim ? claim.bid : CONFIG.WAIVER_FALLBACK_COST,
+      salary: claim ? claim.bid : null,
       source: claim ? "waiver_bid" : "waiver_fallback",
     });
   }
@@ -264,13 +320,14 @@ function classifyPlayers(roster) {
 /**
  * Sum salaries by section. MAIN total (starters + bench) counts against
  * the cap; IR and taxi are cap-exempt — matching the Google Sheet's own
- * "Salary Total" convention. Players with no salary entry count as $0.
+ * "Salary Total" convention. Unknown salaries display as "—" and count as
+ * $0 until a reliable baseline or FAAB value is available.
  */
 function sumSection(playerIds, salaryMap) {
   let total = 0;
   for (const pid of playerIds) {
     const entry = salaryMap.get(pid);
-    if (entry) total += entry.salary;
+    if (entry && Number.isFinite(entry.salary)) total += entry.salary;
   }
   return total;
 }
@@ -306,16 +363,17 @@ function playerRow(pid, salaryMap) {
   const entry = salaryMap.get(pid);
   const name = entry ? entry.name : `Player ${pid}`;
   const pos = entry ? entry.position : "—";
-  const salary = entry ? entry.salary : 0;
+  const hasSalary = Boolean(entry && Number.isFinite(entry.salary));
+  const salary = hasSalary ? entry.salary : null;
   const tip = entry && entry.source === "waiver_bid"
-    ? ` title="Latest completed waiver claim — FAAB bid"`
+    ? ` title="Current FAAB acquisition — winning bid"`
     : entry && entry.source === "saved_salary"
       ? ` title="Previously saved salary (read-only)"`
-      : entry && entry.source === "waiver_fallback"
-        ? ` title="No baseline salary or completed waiver bid"`
+      : !hasSalary
+        ? ` title="Salary unknown — no baseline or applicable FAAB bid"`
         : "";
-  return `<tr data-name="${name}" data-pos="${pos}" data-salary="${salary}">`
-    + `<td>${name}</td><td>${pos}</td><td class="num"${tip}>$${salary}</td></tr>`;
+  return `<tr data-name="${name}" data-pos="${pos}" data-salary="${hasSalary ? salary : -1}">`
+    + `<td>${name}</td><td>${pos}</td><td class="num"${tip}>${hasSalary ? `$${salary}` : "—"}</td></tr>`;
 }
 
 /** A labelled section of the card (Starters / Bench / IR / Taxi). */
@@ -378,7 +436,8 @@ function setupSorting() {
 /**
  * Preserve salaries entered before the page became read-only.
  * Only existing waiver-sourced entries are eligible, matching the fields
- * that were previously editable. This function never writes to storage.
+ * that were previously editable. A saved zero must not hide a current FAAB
+ * acquisition salary. This function never writes to storage.
  */
 function applySavedSalaries(salaryMap, data) {
   let saved;
@@ -393,6 +452,7 @@ function applySavedSalaries(salaryMap, data) {
       if (!Object.hasOwn(saved, pid)) continue;
       const entry = salaryMap.get(pid);
       const salary = saved[pid];
+      if (entry && entry.source === "waiver_bid" && salary === 0) continue;
       if (entry && ["waiver_bid", "waiver_fallback"].includes(entry.source)
         && typeof salary === "number" && Number.isFinite(salary) && salary >= 0) {
         entry.salary = salary;

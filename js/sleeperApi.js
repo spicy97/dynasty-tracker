@@ -2,7 +2,7 @@
  * sleeperApi.js — Fetch helpers for the Sleeper API
  *
  * All calls are read-only GET requests. No authentication required.
- * Rate limit: stay under 1,000 calls/minute (we make 3 per page load).
+ * Rate limit: stay under 1,000 calls/minute (at most 21 per fresh load).
  *
  * Avatar CDN:
  *   Full:      https://sleepercdn.com/avatars/<avatar_id>
@@ -99,21 +99,35 @@ async function fetchRosters(leagueId) {
 }
 
 /**
- * GET /v1/league/{league_id}/transactions/{season}
- * Returns every transaction for the season (waivers, trades, adds/drops).
- * We only care about completed waiver claims: settings.waiver_bid is the
- * FAAB amount spent. The latest claim for each rostered player overrides
- * their baseline salary from salaries.json.
- *
- * NOTE: Sleeper has intermittently returned [] for this endpoint. Callers
- * must treat an empty array as "no bid data" and fall back gracefully.
+ * GET /v1/league/{league_id}/transactions/{week}
+ * Returns transactions for one NFL week. Sleeper also includes offseason
+ * transactions in week 1. A completed waiver's settings.waiver_bid is the
+ * winning FAAB amount; failed claims must never be treated as acquisitions.
  *
  * @param {string} leagueId
- * @param {string} season — e.g. "2026"
+ * @param {number} week — NFL week 1 through 18
  * @returns {Promise<Array>}
  */
-async function fetchTransactions(leagueId, season) {
-  return sleeperFetch(`${SLEEPER_BASE}/league/${leagueId}/transactions/${season}`);
+async function fetchTransactions(leagueId, week) {
+  return sleeperFetch(`${SLEEPER_BASE}/league/${leagueId}/transactions/${week}`);
+}
+
+/**
+ * Fetch the complete transaction history for a league's current season.
+ * All requests must succeed: applying a partial history could resurrect an
+ * old bid after a later add/drop, so callers should retain baseline salaries
+ * if this promise rejects.
+ *
+ * @param {string} leagueId
+ * @param {number} lastWeek — final NFL week to request (18 for a full season)
+ * @returns {Promise<Array>} flattened transactions from every requested week
+ */
+async function fetchSeasonTransactions(leagueId, lastWeek = 18) {
+  const weeks = Array.from({ length: lastWeek }, (_, index) => index + 1);
+  const weeklyTransactions = await Promise.all(
+    weeks.map((week) => fetchTransactions(leagueId, week))
+  );
+  return weeklyTransactions.flat();
 }
 
 /**

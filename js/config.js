@@ -13,12 +13,6 @@ const CONFIG = {
   SALARY_CAP: 245,
 
   /**
-   * Default cost for rostered players with no baseline salary entry and no
-   * completed waiver claim. $0 = no known salary and no cap hit.
-   */
-  WAIVER_FALLBACK_COST: 0,
-
-  /**
    * roster_id → { color, emoji, teamName }
    *
    * roster_id is the stable Sleeper key — never key on owner name.

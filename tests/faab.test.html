@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>FAAB regression tests</title></head>
+<body>
+<pre id="test-results">Running…</pre>
+<script>
+  // Load production functions without starting the page's DOMContentLoaded init.
+  const nativeDocumentAddEventListener = document.addEventListener.bind(document);
+  document.addEventListener = (type, listener, options) => {
+    if (type !== "DOMContentLoaded") nativeDocumentAddEventListener(type, listener, options);
+  };
+</script>
+<script src="../js/config.js"></script>
+<script src="../js/sleeperApi.js"></script>
+<script src="../js/app.js"></script>
+<script>
+  const testOutput = document.getElementById("test-results");
+  const testLines = [];
+  let testFailures = 0;
+
+  function check(condition, message) {
+    if (!condition) throw new Error(message);
+  }
+
+  function test(name, body) {
+    try {
+      body();
+      testLines.push(`PASS ${name}`);
+    } catch (error) {
+      testFailures += 1;
+      testLines.push(`FAIL ${name}: ${error.message}`);
+    }
+  }
+
+  function txn(created, type, adds, drops = null, bid = undefined, status = "complete") {
+    return {
+      created,
+      transaction_id: String(created),
+      type,
+      status,
+      adds,
+      drops,
+      settings: bid === undefined ? null : { waiver_bid: bid },
+    };
+  }
+
+  function currentRosters(...entries) {
+    return entries.map(([roster_id, players]) => ({ roster_id, players }));
+  }
+
+  async function runTests() {
+    test("latest completed claim wins and failed claims are ignored", () => {
+      const transactions = [
+        txn(3, "waiver", { p: 1 }, null, 99, "failed"),
+        txn(2, "waiver", { p: 1 }, null, 9),
+        txn(1, "waiver", { p: 1 }, null, 4),
+      ];
+      const result = buildWaiverBidMap(transactions, currentRosters([1, ["p"]]));
+      check(result.get("p").bid === 9, "expected latest successful bid of 9");
+    });
+
+    test("failed drops do not clear a valid acquisition", () => {
+      const transactions = [
+        txn(1, "waiver", { p: 1 }, null, 7),
+        txn(2, "free_agent", null, { p: 1 }, undefined, "failed"),
+      ];
+      const result = buildWaiverBidMap(transactions, currentRosters([1, ["p"]]));
+      check(result.get("p").bid === 7, "failed drop cleared the salary");
+    });
+
+    test("drop followed by a new waiver claim uses the new bid", () => {
+      const transactions = [
+        txn(1, "waiver", { p: 1 }, null, 12),
+        txn(2, "free_agent", null, { p: 1 }),
+        txn(3, "waiver", { p: 2 }, null, 3),
+      ];
+      const result = buildWaiverBidMap(transactions, currentRosters([2, ["p"]]));
+      check(result.get("p").bid === 3, "expected replacement bid of 3");
+    });
+
+    test("later free-agent add cannot reuse an old waiver bid", () => {
+      const transactions = [
+        txn(1, "waiver", { p: 1 }, null, 12),
+        txn(2, "free_agent", null, { p: 1 }),
+        txn(3, "free_agent", { p: 2 }),
+      ];
+      const result = buildWaiverBidMap(transactions, currentRosters([2, ["p"]]));
+      check(!result.has("p"), "stale waiver bid was reused");
+    });
+
+    test("trade carries the acquisition salary to the receiving roster", () => {
+      const transactions = [
+        txn(1, "waiver", { p: 1 }, null, 7),
+        txn(2, "trade", { p: 2 }, { p: 1 }),
+      ];
+      const result = buildWaiverBidMap(transactions, currentRosters([2, ["p"]]));
+      check(result.get("p").bid === 7, "trade did not preserve salary");
+      check(result.get("p").rosterId === 2, "salary stayed on old roster");
+    });
+
+    test("bid-less trade addition leaves baseline salary untouched", () => {
+      const transactions = [txn(1, "trade", { p: 2 }, { p: 1 })];
+      const result = buildWaiverBidMap(transactions, currentRosters([2, ["p"]]));
+      check(!result.has("p"), "trade invented a FAAB salary");
+    });
+
+    test("zero is a valid bid and non-numeric bids are unknown", () => {
+      const transactions = [
+        txn(1, "waiver", { zero: 1 }, null, 0),
+        txn(1, "waiver", { missing: 1 }),
+      ];
+      const result = buildWaiverBidMap(
+        transactions,
+        currentRosters([1, ["zero", "missing"]])
+      );
+      check(result.get("zero").bid === 0, "zero bid was discarded");
+      check(!result.has("missing"), "missing bid produced a salary");
+    });
+
+    test("unknown salaries render as em dash and total as zero", () => {
+      const salaries = new Map([["p", {
+        name: "Unknown Player", position: "WR", salary: null, source: "waiver_fallback",
+      }]]);
+      check(sumSection(["p"], salaries) === 0, "null salary contaminated cap total");
+      const row = playerRow("p", salaries);
+      check(row.includes(">—</td>"), "unknown salary did not render as em dash");
+      check(row.includes('data-salary="-1"'), "unknown salary sort marker missing");
+    });
+
+    test("saved zero salaries do not replace current FAAB bids", () => {
+      const salaries = new Map([
+        ["claimed", { salary: 12, source: "waiver_bid" }],
+        ["manual", { salary: 9, source: "waiver_bid" }],
+        ["fallback", { salary: null, source: "waiver_fallback" }],
+      ]);
+      localStorage.setItem(SAVED_SALARY_KEY, JSON.stringify({
+        claimed: 0, manual: 7, fallback: 0,
+      }));
+      try {
+        applySavedSalaries(salaries, {
+          rosters: currentRosters([1, ["claimed", "manual", "fallback"]]),
+        });
+      } finally {
+        localStorage.removeItem(SAVED_SALARY_KEY);
+      }
+      check(salaries.get("claimed").salary === 12, "saved zero replaced the latest FAAB bid");
+      check(salaries.get("claimed").source === "waiver_bid", "FAAB salary source was lost");
+      check(salaries.get("manual").salary === 7, "nonzero saved salary was not preserved");
+      check(salaries.get("fallback").salary === 0, "zero without a FAAB bid changed behavior");
+    });
+
+    await (async () => {
+      const originalFetch = sleeperFetch;
+      const urls = [];
+      try {
+        sleeperFetch = async (url) => {
+          urls.push(url);
+          const week = Number(url.split("/").pop());
+          return [{ transaction_id: String(week) }];
+        };
+        const result = await fetchSeasonTransactions("test-league");
+        test("season aggregation requests weeks 1–18 and flattens results", () => {
+          check(urls.length === 18, `expected 18 calls, received ${urls.length}`);
+          check(urls[0].endsWith("/transactions/1"), "week 1 was not requested first");
+          check(urls[17].endsWith("/transactions/18"), "week 18 was not requested");
+          check(!urls.some((url) => url.endsWith("/2026")), "season endpoint still used");
+          check(result.length === 18, "weekly responses were not flattened");
+        });
+      } finally {
+        sleeperFetch = originalFetch;
+      }
+    })();
+
+    const originalLoadTransactions = loadTransactions;
+    try {
+      loadTransactions = async () => { throw new Error("offline"); };
+      const salaries = new Map([["p", { name: "Baseline", salary: 8 }]]);
+      await enrichWaiverAdds(salaries, { rosters: currentRosters([1, ["p"]]) });
+      test("transaction failure preserves baseline salaries", () => {
+        check(salaries.get("p").salary === 8, "baseline salary changed");
+      });
+    } finally {
+      loadTransactions = originalLoadTransactions;
+    }
+
+    const summary = `${testLines.length - testFailures}/${testLines.length} tests passed`;
+    testOutput.textContent = `${summary}\n${testLines.join("\n")}`;
+    document.title = testFailures ? `FAIL: ${summary}` : `PASS: ${summary}`;
+  }
+
+  runTests().catch((error) => {
+    testOutput.textContent = `FAIL test runner: ${error.stack}`;
+    document.title = "FAIL test runner";
+  });
+</script>
+</body>
+</html>
